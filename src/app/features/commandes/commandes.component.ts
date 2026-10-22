@@ -21,6 +21,7 @@ import {
   Tailleur
 } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
+import { requireValid } from '../../core/forms';
 import { isRetard, isoDate } from '../../core/format';
 
 @Component({
@@ -91,7 +92,7 @@ import { isRetard, isoDate } from '../../core/format';
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button mat-button type="button" mat-dialog-close>Annuler</button>
-        <button mat-flat-button color="primary">Créer</button>
+        <button mat-flat-button color="primary" type="submit">Créer</button>
       </mat-dialog-actions>
     </form>
   `
@@ -110,7 +111,7 @@ export class CommandeFormDialogComponent {
     prixUnitaire: [0, Validators.required],
     remise: [0],
     priorite: ['NORMALE'],
-    datePrevue: [''],
+    datePrevue: [isoDate(new Date())],
     notes: ['']
   });
 
@@ -129,8 +130,7 @@ export class CommandeFormDialogComponent {
   }
 
   save(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+    if (!requireValid(this.form, this.notify)) {
       return;
     }
     this.api.post<Commande>('commandes', this.form.getRawValue()).subscribe({

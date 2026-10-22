@@ -16,15 +16,15 @@ export class ApiService {
   }
 
   post<T>(path: string, body: unknown = {}): Observable<T> {
-    return this.http.post<T>(this.url(path), body);
+    return this.http.post<T>(this.url(path), this.payload(body));
   }
 
   put<T>(path: string, body: unknown): Observable<T> {
-    return this.http.put<T>(this.url(path), body);
+    return this.http.put<T>(this.url(path), this.payload(body));
   }
 
   patch<T>(path: string, body: unknown): Observable<T> {
-    return this.http.patch<T>(this.url(path), body);
+    return this.http.patch<T>(this.url(path), this.payload(body));
   }
 
   delete<T>(path: string): Observable<T> {
@@ -77,6 +77,28 @@ export class ApiService {
 
   private url(path: string): string {
     return `${this.baseUrl}/${path.replace(/^\//, '')}`;
+  }
+
+  private payload(body: unknown): unknown {
+    if (body instanceof FormData || body instanceof Blob) {
+      return body;
+    }
+    return this.clean(body);
+  }
+
+  private clean(value: unknown): unknown {
+    if (value === '') {
+      return null;
+    }
+    if (Array.isArray(value)) {
+      return value.map((item) => this.clean(item));
+    }
+    if (value && typeof value === 'object' && !(value instanceof Date)) {
+      return Object.fromEntries(
+        Object.entries(value as Record<string, unknown>).map(([key, item]) => [key, this.clean(item)])
+      );
+    }
+    return value;
   }
 
   private toParams(params?: QueryParams): HttpParams {

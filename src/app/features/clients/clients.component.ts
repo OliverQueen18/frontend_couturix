@@ -10,6 +10,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { ApiService } from '../../core/api.service';
+import { requireValid } from '../../core/forms';
 import { Client, ClientRequest, PageResponse } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
@@ -80,8 +81,7 @@ export class ClientFormDialogComponent {
   });
 
   save(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+    if (!requireValid(this.form, this.notify)) {
       return;
     }
     const body: ClientRequest = this.form.getRawValue();

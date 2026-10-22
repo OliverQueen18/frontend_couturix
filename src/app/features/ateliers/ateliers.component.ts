@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { catchError, debounceTime, distinctUntilChanged, filter, of, switchMap } from 'rxjs';
 import { ApiService } from '../../core/api.service';
+import { requireValid } from '../../core/forms';
 import { Atelier, GeoPoint } from '../../core/models';
 import { AuthService } from '../../core/auth.service';
 import { NotifyService } from '../../core/notify.service';
@@ -342,8 +343,7 @@ export class AteliersComponent {
   }
 
   save(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+    if (!requireValid(this.form, this.notify)) {
       return;
     }
     const body = { ...this.form.getRawValue(), parentId: this.creating ? this.parentId : this.selected?.parentId };

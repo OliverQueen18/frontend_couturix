@@ -8,6 +8,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { ApiService } from '../../core/api.service';
+import { requireValid } from '../../core/forms';
 import { PageResponse, Paie, STATUT_LABELS, Tailleur } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
 
@@ -31,7 +32,7 @@ import { NotifyService } from '../../core/notify.service';
           <mat-form-field appearance="outline"><mat-label>Primes</mat-label><input matInput type="number" formControlName="primes"></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Retenues</mat-label><input matInput type="number" formControlName="retenues"></mat-form-field>
         </div>
-        <button mat-flat-button color="primary">Calculer</button>
+        <button mat-flat-button color="primary" type="submit">Calculer</button>
       </form>
       <div class="table-card">
         <table mat-table [dataSource]="rows">
@@ -98,8 +99,7 @@ export class PaieComponent {
   }
 
   calculer(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+    if (!requireValid(this.form, this.notify)) {
       return;
     }
     this.api.post<Paie>('paies/calculer', this.form.getRawValue()).subscribe({

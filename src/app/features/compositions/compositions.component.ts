@@ -6,6 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { ApiService } from '../../core/api.service';
+import { requireValid } from '../../core/forms';
 import { Composition, CostBreakdown, Modele, PageResponse } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
 import { money } from '../../core/format';
@@ -153,7 +154,11 @@ export class CompositionsComponent {
   }
 
   save(): void {
-    if (!this.modeleId || this.form.invalid) {
+    if (!this.modeleId) {
+      this.notify.error('Choisissez un modèle');
+      return;
+    }
+    if (!requireValid(this.form, this.notify)) {
       return;
     }
     const body = { modeleId: this.modeleId, ...this.form.getRawValue() };

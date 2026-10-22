@@ -1,5 +1,10 @@
 <mat-sidenav-container class="shell">
-  <mat-sidenav opened mode="side" class="sidenav">
+  <mat-sidenav
+    class="sidenav"
+    [mode]="desktop() ? 'side' : 'over'"
+    [opened]="sidenavOpened()"
+    [fixedInViewport]="!desktop()"
+    (openedChange)="onOpenedChange($event)">
     <div class="brand">
       <img src="logo-couturix.png" alt="CouturiX">
       <p>Maison de couture</p>
@@ -8,7 +13,7 @@
       @for (group of visibleGroups(); track group.label) {
         <p class="nav-group">{{ group.label }}</p>
         @for (item of group.items; track item.path) {
-          <a mat-list-item [routerLink]="item.path" routerLinkActive="active">
+          <a mat-list-item [routerLink]="item.path" routerLinkActive="active" (click)="closeMenu()">
             <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
             <span matListItemTitle>{{ item.label }}</span>
           </a>
@@ -16,24 +21,29 @@
       }
     </mat-nav-list>
   </mat-sidenav>
-  <mat-sidenav-content>
+  <mat-sidenav-content class="shell-main">
     <mat-toolbar class="toolbar">
+      @if (!desktop()) {
+        <button mat-icon-button type="button" class="menu-toggle" (click)="toggleMenu()" aria-label="Menu">
+          <mat-icon>menu</mat-icon>
+        </button>
+      }
       <span class="page-icon title-badge"><mat-icon>{{ titleIcon }}</mat-icon></span>
       <span class="page-title">{{ title }}</span>
       <span class="spacer"></span>
       @if (auth.user?.atelierNom) {
         <span class="atelier-chip">
           <mat-icon>storefront</mat-icon>
-          {{ auth.user?.atelierNom }}
+          <span>{{ auth.user?.atelierNom }}</span>
         </span>
       }
-      <a mat-button routerLink="/">
+      <a mat-button routerLink="/" class="toolbar-link">
         <mat-icon>public</mat-icon>
-        Site public
+        <span class="toolbar-label">Site public</span>
       </a>
-      <button mat-button [matMenuTriggerFor]="menu">
+      <button mat-button type="button" [matMenuTriggerFor]="menu" class="toolbar-link">
         <mat-icon>account_circle</mat-icon>
-        {{ auth.displayName() }}
+        <span class="toolbar-label">{{ auth.displayName() }}</span>
       </button>
       <mat-menu #menu="matMenu">
         <button mat-menu-item (click)="logout()">

@@ -11,6 +11,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
+import { requireValid } from '../../core/forms';
 import { ALL_ROLES, AppUser, PageResponse, ROLE_LABELS } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
 import { PhoneFieldComponent } from '../../shared/phone-field.component';
@@ -55,7 +56,7 @@ import { PhoneFieldComponent } from '../../shared/phone-field.component';
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button mat-button type="button" mat-dialog-close>Annuler</button>
-        <button mat-flat-button color="primary">Enregistrer</button>
+        <button mat-flat-button color="primary" type="submit">Enregistrer</button>
       </mat-dialog-actions>
     </form>
   `
@@ -81,14 +82,14 @@ export class UserFormDialogComponent {
     prenom: [this.data?.prenom ?? '', Validators.required],
     email: [this.data?.email ?? '', [Validators.required, Validators.email]],
     telephone: [this.data?.telephone ?? ''],
-    password: [''],
+    password: ['', this.data ? [] : [Validators.required, Validators.minLength(8)]],
     roles: [this.data?.roles ?? []],
     plan: [this.data?.plan ?? 'GRATUIT'],
     actif: [this.data?.actif ?? true]
   });
 
   save(): void {
-    if (this.form.invalid) {
+    if (!requireValid(this.form, this.notify)) {
       return;
     }
     const { plan, ...rest } = this.form.getRawValue();

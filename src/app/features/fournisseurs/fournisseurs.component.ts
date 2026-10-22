@@ -9,6 +9,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { ApiService } from '../../core/api.service';
+import { requireValid } from '../../core/forms';
 import { Fournisseur, PageResponse } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
@@ -37,7 +38,7 @@ import { PhoneFieldComponent } from '../../shared/phone-field.component';
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button mat-button type="button" mat-dialog-close>Annuler</button>
-        <button mat-flat-button color="primary">Enregistrer</button>
+        <button mat-flat-button color="primary" type="submit">Enregistrer</button>
       </mat-dialog-actions>
     </form>
   `
@@ -58,7 +59,7 @@ export class FournisseurFormDialogComponent {
   });
 
   save(): void {
-    if (this.form.invalid) {
+    if (!requireValid(this.form, this.notify)) {
       return;
     }
     const body = this.form.getRawValue();

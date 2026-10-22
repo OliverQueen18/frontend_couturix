@@ -8,6 +8,8 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { ApiService } from '../../core/api.service';
+import { requireValid } from '../../core/forms';
+import { isoDate } from '../../core/format';
 import { Client, Commande, PageResponse, Paiement } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
 
@@ -46,7 +48,7 @@ import { NotifyService } from '../../core/notify.service';
           <mat-form-field appearance="outline"><mat-label>Référence</mat-label><input matInput formControlName="reference"></mat-form-field>
           <mat-form-field appearance="outline" class="full"><mat-label>Notes</mat-label><input matInput formControlName="notes"></mat-form-field>
         </div>
-        <button mat-flat-button color="primary">Enregistrer</button>
+        <button mat-flat-button color="primary" type="submit">Enregistrer</button>
       </form>
       <div class="table-card">
         <table mat-table [dataSource]="rows">
@@ -78,7 +80,7 @@ export class PaiementsComponent {
     commandeId: [null as number | null],
     montant: [0, Validators.required],
     moyen: ['ESPECES', Validators.required],
-    datePaiement: ['', Validators.required],
+    datePaiement: [isoDate(new Date()), Validators.required],
     reference: [''],
     notes: ['']
   });
@@ -107,8 +109,7 @@ export class PaiementsComponent {
   }
 
   save(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+    if (!requireValid(this.form, this.notify)) {
       return;
     }
     this.api.post<Paiement>('paiements', this.form.getRawValue()).subscribe({

@@ -11,6 +11,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { ApiService } from '../../core/api.service';
+import { requireValid } from '../../core/forms';
 import { ArticleStock, InventaireResultat, MouvementStock, PageResponse } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
 import { money } from '../../core/format';
@@ -86,7 +87,7 @@ interface InventaireLigne {
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button mat-button type="button" mat-dialog-close>Annuler</button>
-        <button mat-flat-button color="primary">Enregistrer</button>
+        <button mat-flat-button color="primary" type="submit">Enregistrer</button>
       </mat-dialog-actions>
     </form>
   `
@@ -107,7 +108,7 @@ export class ArticleFormDialogComponent {
   });
 
   save(): void {
-    if (this.form.invalid) {
+    if (!requireValid(this.form, this.notify)) {
       return;
     }
     const body = this.form.getRawValue();
@@ -171,7 +172,7 @@ export class ArticleFormDialogComponent {
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button mat-button type="button" mat-dialog-close>Annuler</button>
-        <button mat-flat-button color="primary">Valider</button>
+        <button mat-flat-button color="primary" type="submit">Valider</button>
       </mat-dialog-actions>
     </form>
   `
@@ -191,7 +192,7 @@ export class MouvementFormDialogComponent {
   });
 
   save(): void {
-    if (this.form.invalid) {
+    if (!requireValid(this.form, this.notify)) {
       return;
     }
     const value = this.form.getRawValue();

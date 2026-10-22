@@ -194,6 +194,10 @@ app-street-map {
   border: 1px solid rgba(255, 255, 255, 0.7);
 }
 
+.table-card {
+  overflow-x: auto;
+}
+
 table.mat-mdc-table {
   width: 100%;
 }
@@ -420,6 +424,18 @@ table.mat-mdc-table {
   flex-direction: column;
   gap: 0.35rem;
   min-width: min(680px, 92vw);
+}
+
+.cdk-overlay-pane.mat-mdc-dialog-panel {
+  max-width: calc(100vw - 1.2rem) !important;
+}
+
+.mat-mdc-dialog-container {
+  max-height: 92vh;
+}
+
+.mat-mdc-dialog-content {
+  max-height: min(70vh, 640px);
 }
 
 h2[mat-dialog-title],
@@ -677,5 +693,23 @@ h2[mat-dialog-title],
 
   .page {
     padding: 1rem 0.9rem 2rem;
+  }
+
+  .page-header {
+    align-items: stretch;
+  }
+
+  .page-header > button,
+  .page-header > a {
+    width: 100%;
+  }
+
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filters .mat-mdc-form-field {
+    width: 100%;
   }
 }

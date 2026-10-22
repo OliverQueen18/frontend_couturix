@@ -2,6 +2,11 @@
   height: 100%;
 }
 
+.shell-main {
+  min-width: 0;
+  overflow-x: hidden;
+}
+
 .sidenav {
   width: var(--cx-sidebar);
   background:
@@ -77,7 +82,14 @@
   box-shadow: none;
   border-bottom: 1px solid var(--cx-line);
   min-height: 68px;
+  height: auto;
+  flex-wrap: wrap;
   gap: 0.55rem;
+  padding: 0.45rem 0.75rem;
+}
+
+.menu-toggle {
+  flex-shrink: 0;
 }
 
 .title-badge {
@@ -106,6 +118,13 @@
   font-size: 0.78rem;
   padding: 0.3rem 0.75rem;
   border-radius: 999px;
+  max-width: min(220px, 42vw);
+}
+
+.atelier-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .atelier-chip mat-icon {
@@ -116,4 +135,29 @@
 
 :host ::ng-deep .mat-drawer-inner-container {
   background: transparent;
+}
+
+@media (max-width: 1023px) {
+  .sidenav {
+    width: min(var(--cx-sidebar), 86vw);
+  }
+
+  .page-title {
+    font-size: 1.05rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .toolbar-label {
+    display: none;
+  }
+
+  .atelier-chip {
+    max-width: 9.5rem;
+  }
+
+  .title-badge {
+    width: 34px;
+    height: 34px;
+  }
 }

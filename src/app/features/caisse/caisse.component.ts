@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { ApiService } from '../../core/api.service';
+import { requireValid } from '../../core/forms';
 import { Caisse, CaisseOperation } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
 import { money } from '../../core/format';
@@ -58,7 +59,7 @@ import { money } from '../../core/format';
             </mat-form-field>
             <mat-form-field appearance="outline" class="full"><mat-label>Motif</mat-label><input matInput formControlName="motif"></mat-form-field>
           </div>
-          <button mat-flat-button color="primary">Ajouter</button>
+          <button mat-flat-button color="primary" type="submit">Ajouter</button>
         </form>
         <div class="table-card">
           <table mat-table [dataSource]="caisse.operations ?? []">
@@ -75,7 +76,7 @@ import { money } from '../../core/format';
           <mat-form-field appearance="outline"><mat-label>Solde réel</mat-label><input matInput type="number" formControlName="soldeReel"></mat-form-field>
           <p>Écart estimé : {{ money(ecart()) }}</p>
           <mat-form-field appearance="outline"><mat-label>Commentaires</mat-label><textarea matInput formControlName="commentaires"></textarea></mat-form-field>
-          <button mat-flat-button color="primary">Clôturer la caisse</button>
+          <button mat-flat-button color="primary" type="submit">Clôturer la caisse</button>
         </form>
       }
     </section>
@@ -123,7 +124,7 @@ export class CaisseComponent {
   }
 
   addOp(): void {
-    if (!this.caisse || this.opForm.invalid) {
+    if (!this.caisse || !requireValid(this.opForm, this.notify)) {
       return;
     }
     this.api.post<CaisseOperation>(`caisse/${this.caisse.id}/operations`, this.opForm.getRawValue()).subscribe({
@@ -142,7 +143,7 @@ export class CaisseComponent {
   }
 
   cloturer(): void {
-    if (!this.caisse) {
+    if (!this.caisse || !requireValid(this.closeForm, this.notify)) {
       return;
     }
     this.api.post<Caisse>(`caisse/${this.caisse.id}/cloturer`, {

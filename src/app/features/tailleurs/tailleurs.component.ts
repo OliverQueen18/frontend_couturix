@@ -10,6 +10,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { ApiService } from '../../core/api.service';
+import { requireValid } from '../../core/forms';
 import { PageResponse, Specialite, Tailleur } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
 import { PhoneFieldComponent } from '../../shared/phone-field.component';
@@ -55,7 +56,7 @@ import { PhoneFieldComponent } from '../../shared/phone-field.component';
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button mat-button type="button" mat-dialog-close>Annuler</button>
-        <button mat-flat-button color="primary">Enregistrer</button>
+        <button mat-flat-button color="primary" type="submit">Enregistrer</button>
       </mat-dialog-actions>
     </form>
   `
@@ -80,7 +81,7 @@ export class TailleurFormDialogComponent {
   });
 
   save(): void {
-    if (this.form.invalid) {
+    if (!requireValid(this.form, this.notify)) {
       return;
     }
     const body = this.form.getRawValue();

@@ -11,6 +11,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { ApiService } from '../../core/api.service';
+import { requireValid } from '../../core/forms';
 import { CategorieModele, Modele, PageResponse, STATUT_LABELS } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
 import { joursLabel } from '../../core/format';
@@ -71,7 +72,7 @@ export interface ModeleFormData {
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button mat-button type="button" mat-dialog-close>Annuler</button>
-        <button mat-flat-button color="primary">Enregistrer</button>
+        <button mat-flat-button color="primary" type="submit">Enregistrer</button>
       </mat-dialog-actions>
     </form>
   `
@@ -92,7 +93,7 @@ export class ModeleFormDialogComponent {
   });
 
   save(): void {
-    if (this.form.invalid) {
+    if (!requireValid(this.form, this.notify)) {
       return;
     }
     const body = this.form.getRawValue();

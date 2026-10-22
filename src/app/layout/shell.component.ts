@@ -1,4 +1,6 @@
-import { Component, inject } from '@angular/core';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { Component, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,7 +8,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { filter } from 'rxjs';
+import { filter, map } from 'rxjs';
 import { AuthService } from '../core/auth.service';
 
 interface NavItem {
@@ -43,6 +45,12 @@ export class ShellComponent {
   readonly auth = inject(AuthService);
   title = 'Tableau de bord';
   titleIcon = 'dashboard';
+  readonly desktop = toSignal(
+    inject(BreakpointObserver).observe('(min-width: 1024px)').pipe(map((state) => state.matches)),
+    { initialValue: typeof window === 'undefined' ? true : window.innerWidth >= 1024 }
+  );
+  readonly menuOpen = signal(false);
+  readonly sidenavOpened = computed(() => !!this.desktop() || this.menuOpen());
 
   readonly groups: NavGroup[] = [
     {
@@ -96,6 +104,7 @@ export class ShellComponent {
       const item = this.groups.flatMap((g) => g.items).find((nav) => e.urlAfterRedirects.startsWith(nav.path));
       this.title = item?.label ?? 'CouturiX';
       this.titleIcon = item?.icon ?? 'auto_awesome';
+      this.closeMenu();
     });
   }
 
@@ -106,6 +115,20 @@ export class ShellComponent {
         items: group.items.filter((item) => !item.roles || this.auth.hasAnyRole(item.roles))
       }))
       .filter((group) => group.items.length);
+  }
+
+  toggleMenu(): void {
+    this.menuOpen.update((open) => !open);
+  }
+
+  closeMenu(): void {
+    this.menuOpen.set(false);
+  }
+
+  onOpenedChange(open: boolean): void {
+    if (!this.desktop()) {
+      this.menuOpen.set(open);
+    }
   }
 
   logout(): void {
