@@ -1,0 +1,20 @@
+<div class="bar" aria-label="Villes">
+  <button type="button" [class.on]="allActive()" (click)="pick.emit([])" [attr.aria-pressed]="allActive()">
+    <span class="ico">▦</span>
+    <span>Tous</span>
+    <strong>{{ total() }}</strong>
+  </button>
+  @for (name of quick; track name) {
+    <button type="button" [class.on]="active(name)" (click)="pick.emit([name])" [attr.aria-pressed]="active(name)">
+      <span class="ico">📍</span>
+      <span>{{ name }}</span>
+      <strong>{{ count(name) }}</strong>
+    </button>
+  }
+  <button type="button" [class.on]="othersActive()" (click)="pick.emit(others)" [attr.aria-pressed]="othersActive()">
+    <span class="ico">⋯</span>
+    <span>Autres villes</span>
+    <small>Voir toutes</small>
+    <strong>{{ othersCount() }}</strong>
+  </button>
+</div>

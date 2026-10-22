@@ -1,0 +1,58 @@
+<article class="sheet" role="document" [attr.aria-label]="model.name">
+  <button type="button" class="close" (click)="close()" aria-label="Fermer le modèle">×</button>
+  <div class="layout">
+    <div class="visual">
+      @if (model.image && !photoFailed) {
+        <img [src]="model.image" [alt]="model.name" (error)="photoFailed = true">
+      } @else {
+        <app-garment [kind]="model.kind" [tone]="model.tone" [label]="model.name" />
+      }
+      @if (model.badge) {
+        <span class="badge" [class.promo]="model.badge === 'Promo'">{{ model.badge }}</span>
+      }
+    </div>
+
+    <div class="content">
+      <p class="kicker">{{ model.categoryName }}</p>
+      <h2>{{ model.name }}</h2>
+      <p class="price">
+        <strong>{{ formatPrice(model.price) }}</strong>
+        @if (model.oldPrice) { <s>{{ formatPrice(model.oldPrice) }}</s> }
+      </p>
+      @if (model.reviewCount) {
+        <p class="rating"><span>{{ stars() }}</span> {{ model.rating }} ({{ model.reviewCount }} avis)</p>
+      }
+      @if (model.description) {
+        <p class="lead">{{ model.description }}</p>
+      }
+
+      <dl>
+        @if (model.fabric) { <div><dt>Tissu</dt><dd>{{ model.fabric }}</dd></div> }
+        @if (model.gender) { <div><dt>Genre</dt><dd>{{ model.gender }}</dd></div> }
+        @if (model.occasion) { <div><dt>Occasion</dt><dd>{{ model.occasion }}</dd></div> }
+        @if (model.style) { <div><dt>Style</dt><dd>{{ model.style }}</dd></div> }
+        @if (model.sizes?.length) { <div><dt>Tailles</dt><dd>{{ model.sizes?.join(', ') }}</dd></div> }
+        @if (model.colors?.length) { <div><dt>Couleurs</dt><dd>{{ model.colors?.join(', ') }}</dd></div> }
+        @if (model.city) { <div><dt>Ville</dt><dd>{{ model.city }}</dd></div> }
+        @if (model.availability) { <div><dt>Disponibilité</dt><dd>{{ model.availability }}</dd></div> }
+      </dl>
+
+      <a class="shop" [routerLink]="atelierLink()" [queryParams]="atelierQuery()" (click)="close()">
+        {{ model.workshopName }}
+      </a>
+
+      <form [formGroup]="form" (ngSubmit)="send()">
+        <h3>Demande de commande</h3>
+        <div class="grid">
+          <label>Nom<input formControlName="nom" autocomplete="family-name"></label>
+          <label>Prénom<input formControlName="prenom" autocomplete="given-name"></label>
+        </div>
+        <app-phone-field formControlName="telephone" label="Téléphone" />
+        <label>E-mail<input type="email" formControlName="email" autocomplete="email"></label>
+        <label>Quantité<input type="number" min="1" formControlName="quantite"></label>
+        <label>Notes<textarea rows="3" formControlName="notes"></textarea></label>
+        <button type="submit" [disabled]="sending">Envoyer la demande</button>
+      </form>
+    </div>
+  </div>
+</article>

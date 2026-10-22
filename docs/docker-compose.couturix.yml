@@ -1,0 +1,117 @@
+# Overlay CouturiX pour le compose VPS (nginx-proxy + Let's Encrypt).
+# Copier ce fichier à côté du docker-compose.yml du serveur, puis :
+#   docker compose -f docker-compose.yml -f docker-compose.couturix.yml up -d
+#
+# DNS : A/AAAA couturix.com et www.couturix.com → IP du VPS
+# Le Nginx du frontend reverse-proxie /api vers backend:8080 (alias réseau).
+# L’API n’est pas exposée sur internet.
+# nginx-proxy limite à 1 Mo par défaut : Jenkins pose data/vhost.d/couturix.com (32m).
+
+services:
+  postgres-couturix:
+    image: postgres:16-alpine
+    container_name: postgres-couturix
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${COUTURIX_DB}
+      POSTGRES_USER: ${COUTURIX_DB_USER}
+      POSTGRES_PASSWORD: ${COUTURIX_DB_PASS}
+    volumes:
+      - couturix_pgdata:/var/lib/postgresql/data
+      - ${COUTURIX_BACKUP_HOST_PATH:-./backup/couturix}:/backup
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${COUTURIX_DB_USER} -d ${COUTURIX_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    networks:
+      - couturix
+
+  backend-couturix:
+    image: oliverqueen18/couturix-backend:${COUTURIX_BACKEND_TAG:-${COUTURIX_TAG:-latest}}
+    container_name: couturix-backend
+    restart: unless-stopped
+    expose:
+      - "8080"
+    depends_on:
+      postgres-couturix:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8080
+      DATABASE_URL: jdbc:postgresql://postgres-couturix:5432/${COUTURIX_DB}
+      DATABASE_USERNAME: ${COUTURIX_DB_USER}
+      DATABASE_PASSWORD: ${COUTURIX_DB_PASS}
+      JWT_SECRET: ${COUTURIX_JWT_SECRET}
+      ADMIN_EMAIL: ${COUTURIX_ADMIN_EMAIL:?COUTURIX_ADMIN_EMAIL is required}
+      ADMIN_PASSWORD: ${COUTURIX_ADMIN_PASSWORD:?COUTURIX_ADMIN_PASSWORD is required}
+      MAIL_HOST: ${COUTURIX_MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${COUTURIX_MAIL_PORT:-587}
+      MAIL_USERNAME: ${SMTP_USER}
+      MAIL_PASSWORD: ${SMTP_PASSWORD}
+      MAIL_SMTP_AUTH: ${COUTURIX_MAIL_SMTP_AUTH:-true}
+      MAIL_SMTP_STARTTLS: ${COUTURIX_MAIL_SMTP_STARTTLS:-true}
+      MAIL_FROM: ${SMTP_USER}
+      WHATSAPP_ENABLED: ${COUTURIX_WHATSAPP_ENABLED:-false}
+      WHATSAPP_ACCESS_TOKEN: ${COUTURIX_WHATSAPP_ACCESS_TOKEN:-}
+      WHATSAPP_PHONE_NUMBER_ID: ${COUTURIX_WHATSAPP_PHONE_NUMBER_ID:-}
+      STOCK_ALLOW_NEGATIVE: ${COUTURIX_STOCK_ALLOW_NEGATIVE:-false}
+      STORAGE_DIR: /data/uploads
+    volumes:
+      - ${COUTURIX_UPLOAD_HOST_PATH:-./uploads/couturix}:/data/uploads
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/actuator/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 90s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    networks:
+      couturix:
+        aliases:
+          - backend
+
+  frontend-couturix:
+    image: oliverqueen18/couturix-frontend:${COUTURIX_FRONTEND_TAG:-${COUTURIX_TAG:-latest}}
+    container_name: couturix-frontend
+    restart: unless-stopped
+    expose:
+      - "80"
+    depends_on:
+      backend-couturix:
+        condition: service_healthy
+    environment:
+      VIRTUAL_HOST: ${COUTURIX_HOST:-couturix.com},${COUTURIX_HOST_WWW:-www.couturix.com}
+      LETSENCRYPT_HOST: ${COUTURIX_HOST:-couturix.com},${COUTURIX_HOST_WWW:-www.couturix.com}
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
+      VIRTUAL_PORT: 80
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    networks:
+      - proxy
+      - couturix
+
+volumes:
+  couturix_pgdata:
+
+networks:
+  proxy:
+  couturix:

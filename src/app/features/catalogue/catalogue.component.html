@@ -1,0 +1,181 @@
+<app-public-nav />
+<app-catalogue-hero />
+
+<main class="catalogue">
+  <app-category-bar [counts]="result()?.counts ?? {}" [active]="activeCategory()" (picked)="pickCategory($event)" />
+
+  <div class="layout">
+    @if (drawer()) {
+      <button type="button" class="backdrop" (click)="drawer.set(false)" aria-label="Fermer les filtres"></button>
+    }
+    <aside class="side" [class.open]="drawer()">
+      <div class="drawer-bar">
+        <strong>Filtres</strong>
+        <button type="button" (click)="drawer.set(false)" aria-label="Fermer">Fermer</button>
+      </div>
+      <app-catalogue-filters
+        [filters]="filters()"
+        [counts]="result()?.counts ?? {}"
+        [workshops]="result()?.workshops ?? []"
+        [total]="result()?.total ?? 0"
+        (filtersChange)="onFilters($event)"
+        (applyFilters)="closeDrawer()"
+        (resetFilters)="reset()" />
+    </aside>
+
+    <section id="resultats">
+      <div class="mobile-tools">
+        <button type="button" (click)="drawer.set(true)" aria-label="Afficher les filtres">
+          Filtres @if (chips().length) { ({{ chips().length }}) }
+        </button>
+        <label>
+          Trier
+          <select [value]="filters().sort ?? 'recent'" (change)="setSort($any($event.target).value)" aria-label="Trier">
+            <option value="recent">Plus récents</option>
+            <option value="popular">Plus populaires</option>
+            <option value="rating">Mieux notés</option>
+            <option value="price-asc">Prix croissant</option>
+            <option value="price-desc">Prix décroissant</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="toolbar">
+        <strong>{{ foundLabel() }}</strong>
+        <div class="tools">
+          <label>
+            Trier par
+            <select [value]="filters().sort ?? 'recent'" (change)="setSort($any($event.target).value)" aria-label="Trier par">
+              <option value="recent">Plus récents</option>
+              <option value="popular">Plus populaires</option>
+              <option value="rating">Mieux notés</option>
+              <option value="price-asc">Prix croissant</option>
+              <option value="price-desc">Prix décroissant</option>
+            </select>
+          </label>
+          <button type="button" [class.on]="layout() === 'grid'" (click)="layout.set('grid')" aria-label="Vue grille"><mat-icon>grid_view</mat-icon></button>
+          <button type="button" [class.on]="layout() === 'list'" (click)="layout.set('list')" aria-label="Vue liste"><mat-icon>view_list</mat-icon></button>
+        </div>
+      </div>
+
+      @if (chips().length) {
+        <div class="chips">
+          @for (chip of chips(); track chip.key + chip.label) {
+            <button type="button" (click)="removeChip(chip)">{{ chip.label }} <span aria-hidden="true">×</span></button>
+          }
+          @if (chips().length > 1) {
+            <button type="button" class="clear" (click)="reset()">Tout effacer</button>
+          }
+        </div>
+      }
+
+      @if (warning()) {
+        <div class="alert" role="status">
+          <p>Impossible de charger le catalogue publié pour le moment. La vitrine reste consultable.</p>
+          <button type="button" (click)="retry()">Réessayer</button>
+        </div>
+      }
+
+      @if (loading()) {
+        <div class="grid" aria-hidden="true">
+          @for (bone of skeletons; track bone) {
+            <div class="bone"><span></span><span></span><span></span><span></span></div>
+          }
+        </div>
+      } @else if (result()?.total === 0) {
+        <div class="empty">
+          <mat-icon>content_cut</mat-icon>
+          <h2>Aucun modèle trouvé</h2>
+          <p>Essayez de modifier vos critères de recherche.</p>
+          <button type="button" (click)="reset()">Réinitialiser les filtres</button>
+        </div>
+      } @else {
+        <div class="grid" [class.list]="layout() === 'list'">
+          @for (model of result()!.items; track model.id; let index = $index) {
+            <app-model-card [model]="model" [layout]="layout()" (favorite)="toggleFavorite($event)" />
+            @if (result()!.page === 1 && index === 7) {
+              <aside class="ad">
+                <p>Espace partenaire</p>
+                <strong>Votre publicité ici</strong>
+                <span>Faites découvrir votre maison de tissus, de machines ou de création.</span>
+              </aside>
+            }
+          }
+        </div>
+
+        <div class="pager">
+          <div class="pages">
+            <button type="button" (click)="go((result()?.page ?? 1) - 1)" [disabled]="(result()?.page ?? 1) <= 1" aria-label="Précédent">‹</button>
+            @for (item of pageList(result()?.page ?? 1, result()?.pages ?? 1); track $index) {
+              @if (item === '…') {
+                <span>…</span>
+              } @else {
+                <button type="button" [class.on]="item === result()?.page" (click)="go(+item)">{{ item }}</button>
+              }
+            }
+            <button type="button" (click)="go((result()?.page ?? 1) + 1)" [disabled]="(result()?.page ?? 1) >= (result()?.pages ?? 1)" aria-label="Suivant">›</button>
+          </div>
+          <label>
+            <select [value]="filters().pageSize ?? 12" (change)="setPer($any($event.target).value)" aria-label="Modèles par page">
+              <option value="12">12 modèles par page</option>
+              <option value="24">24 modèles par page</option>
+              <option value="48">48 modèles par page</option>
+            </select>
+          </label>
+        </div>
+      }
+    </section>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="foot-grid">
+    <div>
+      <img src="logo-couturix.png" alt="CouturiX">
+      <p>La plateforme digitale des ateliers de couture.</p>
+    </div>
+    <div>
+      <p>Plateforme</p>
+      <a routerLink="/">Accueil</a>
+      <a routerLink="/ateliers">Ateliers</a>
+      <a routerLink="/catalogue">Catalogue</a>
+      <a routerLink="/" fragment="tarifs">Tarifs</a>
+    </div>
+    <div>
+      <p>Entreprise</p>
+      <a routerLink="/" fragment="a-propos">À propos</a>
+      <a routerLink="/" fragment="contact">Contact</a>
+      <a routerLink="/" fragment="partenaires">Partenaires</a>
+      <a routerLink="/" fragment="a-propos">Blog</a>
+    </div>
+    <div>
+      <p>Aide</p>
+      <a routerLink="/" fragment="contact">Centre d’aide</a>
+      <a routerLink="/" fragment="contact">Conditions d’utilisation</a>
+      <a routerLink="/" fragment="contact">Politique de confidentialité</a>
+    </div>
+    <form (submit)="subscribeNews($event)">
+      <p>Newsletter</p>
+      @if (subscribed()) {
+        <strong>Merci, votre adresse est notée.</strong>
+      } @else {
+        <span>Recevez nos actualités et nouveautés.</span>
+        <label class="mail">
+          <input name="email" type="email" required placeholder="Votre email" aria-label="Votre email">
+          <button type="submit">S’abonner</button>
+        </label>
+      }
+    </form>
+  </div>
+  <div class="base">
+    <span>© {{ year }} CouturiX. Tous droits réservés.</span>
+    <span class="socials">
+      <a href="https://facebook.com" target="_blank" rel="noopener" aria-label="Facebook">Fb</a>
+      <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram">Ig</a>
+      <a href="https://www.tiktok.com" target="_blank" rel="noopener" aria-label="TikTok">Tk</a>
+      <a href="https://youtube.com" target="_blank" rel="noopener" aria-label="YouTube">Yt</a>
+      <a href="https://www.linkedin.com" target="_blank" rel="noopener" aria-label="LinkedIn">In</a>
+    </span>
+    <span>Simple · Élégant · Rentable</span>
+  </div>
+</footer>

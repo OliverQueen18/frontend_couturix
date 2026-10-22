@@ -1,0 +1,200 @@
+pipeline {
+  agent any
+  options {
+    disableConcurrentBuilds()
+    buildDiscarder(logRotator(numToKeepStr: '20'))
+    timeout(time: 40, unit: 'MINUTES')
+  }
+  triggers { pollSCM('H/10 * * * *') }
+  parameters {
+    booleanParam(name: 'DEPLOY', defaultValue: true, description: 'Déployer après le build')
+    choice(name: 'DEPLOY_MODE', choices: ['hub', 'ssh', 'same-host'], description: 'hub : Docker Hub + compose pull sur le VPS. ssh : docker save. same-host : Jenkins sur le serveur.')
+    string(name: 'DEPLOY_PATH', defaultValue: '/home/adminubuntu/OliveApps', description: 'Dossier du compose VPS (docker-compose.yml + docker-compose.couturix.yml + .env)')
+    string(name: 'DEPLOY_HOST', defaultValue: 'adminubuntu@couturix.com', description: 'Hôte SSH si hub/ssh, ex. root@vps')
+  }
+  environment {
+    REGISTRY = 'oliverqueen18'
+    IMAGE_NAME = 'couturix-frontend'
+    COMPOSE_SERVICE = 'frontend-couturix'
+    COMPOSE_FILES = '-f docker-compose.yml -f docker-compose.couturix.yml'
+    SSH_CREDENTIALS_ID = 'ssh-server-credentials'
+    DOCKERHUB_CREDENTIALS_ID = 'dockerhub-credentials'
+  }
+  stages {
+    stage('Préparer') {
+      steps {
+        script {
+          def sha = env.GIT_COMMIT ?: ''
+          def shortSha = sha.length() >= 8 ? sha.substring(0, 8) : (env.BUILD_NUMBER ?: 'local')
+          env.IMAGE_TAG = "${env.BUILD_NUMBER}-${shortSha}"
+          env.HUB_IMAGE = "${env.REGISTRY}/${env.IMAGE_NAME}"
+          env.FULL_IMAGE = "${env.HUB_IMAGE}:${env.IMAGE_TAG}"
+          echo "Image : ${env.FULL_IMAGE}"
+        }
+      }
+    }
+    stage('Image Docker') {
+      steps {
+        sh 'docker build --no-cache --build-arg GIT_SHA="$GIT_COMMIT" -t "$FULL_IMAGE" -t "$HUB_IMAGE:latest" -t "$IMAGE_NAME:latest" .'
+      }
+    }
+    stage('Déployer') {
+      when { expression { shouldDeploy() } }
+      steps {
+        script { deployImage() }
+      }
+    }
+  }
+  post {
+    success { echo "Frontend OK — ${env.FULL_IMAGE}" }
+    failure { echo 'Échec du pipeline frontend CouturiX.' }
+  }
+}
+
+boolean shouldDeploy() {
+  if (!params.DEPLOY) {
+    return false
+  }
+  def branch = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst(/^origin\//, '')
+  return !branch || branch == 'main' || branch == 'master'
+}
+
+void deployImage() {
+  if (params.DEPLOY_MODE == 'hub') {
+    pushHub()
+    remoteComposePull()
+    return
+  }
+  if (params.DEPLOY_MODE == 'ssh') {
+    withSsh {
+      sh """
+        docker save '${env.FULL_IMAGE}' | gzip | ssh -i "\$SSH_KEY" -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new ${params.DEPLOY_HOST} 'gunzip | docker load'
+      """
+      writeFile file: 'remote-deploy.sh', text: remoteUpScript()
+      sh """
+        ssh -i "\$SSH_KEY" -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new ${params.DEPLOY_HOST} 'bash -s' < remote-deploy.sh
+      """
+    }
+    return
+  }
+  sh remoteUpScript()
+}
+
+void pushHub() {
+  withCredentials([usernamePassword(credentialsId: env.DOCKERHUB_CREDENTIALS_ID, usernameVariable: 'DH_USER', passwordVariable: 'DH_PASS')]) {
+    sh '''
+      echo "$DH_PASS" | docker login -u "$DH_USER" --password-stdin
+      docker push "$FULL_IMAGE"
+      docker push "$HUB_IMAGE:latest"
+      docker logout
+    '''
+  }
+}
+
+void remoteComposePull() {
+  writeFile file: 'remote-deploy.sh', text: remotePullScript()
+  withSsh {
+    sh """
+      scp -i "\$SSH_KEY" -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new docs/docker-compose.couturix.yml ${params.DEPLOY_HOST}:${params.DEPLOY_PATH}/docker-compose.couturix.yml
+      scp -i "\$SSH_KEY" -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new docs/nginx-proxy-vhost.couturix.conf ${params.DEPLOY_HOST}:${params.DEPLOY_PATH}/.couturix-vhost.conf
+      ssh -i "\$SSH_KEY" -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new ${params.DEPLOY_HOST} 'bash -s' < remote-deploy.sh
+    """
+  }
+}
+
+void withSsh(Closure body) {
+  if (!params.DEPLOY_HOST?.trim()) {
+    error 'DEPLOY_HOST est obligatoire (SSH vers le VPS).'
+  }
+  withCredentials([sshUserPrivateKey(credentialsId: env.SSH_CREDENTIALS_ID, keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
+    body()
+  }
+}
+
+String remotePullScript() {
+  return """#!/bin/bash
+set -euo pipefail
+cd '${params.DEPLOY_PATH}'
+if [ ! -f .env ]; then
+  echo "Fichier .env introuvable dans ${params.DEPLOY_PATH}" >&2
+  exit 1
+fi
+${uploadProxyFix()}
+awk -v k='COUTURIX_FRONTEND_TAG' -v v='${env.IMAGE_TAG}' '
+  BEGIN { f=0 }
+  \$0 ~ "^" k "=" { print k "=" v; f=1; next }
+  { print }
+  END { if (!f) print k "=" v }
+' .env > .env.tmp && mv .env.tmp .env
+export COUTURIX_FRONTEND_TAG='${env.IMAGE_TAG}'
+docker compose ${env.COMPOSE_FILES} pull ${env.COMPOSE_SERVICE}
+docker compose ${env.COMPOSE_FILES} up -d --no-deps --force-recreate --pull always ${env.COMPOSE_SERVICE}
+${healthLoop()}
+"""
+}
+
+String remoteUpScript() {
+  return """#!/bin/bash
+set -euo pipefail
+cd '${params.DEPLOY_PATH}'
+if [ ! -f .env ]; then
+  echo "Fichier .env introuvable dans ${params.DEPLOY_PATH}" >&2
+  exit 1
+fi
+docker compose ${env.COMPOSE_FILES} up -d --no-deps --no-build ${env.COMPOSE_SERVICE}
+${healthLoop()}
+"""
+}
+
+String uploadProxyFix() {
+  return '''
+set +e
+mkdir -p uploads/couturix
+chmod 777 uploads/couturix || true
+CONF=.couturix-vhost.conf
+if [ -f "$CONF" ]; then
+  VDIR=""
+  PROXY=""
+  for name in $(docker ps --format '{{.Names}}'); do
+    src=$(docker inspect "$name" --format '{{range .Mounts}}{{if eq .Destination "/etc/nginx/vhost.d"}}{{.Source}}{{end}}{{end}}' 2>/dev/null || true)
+    if [ -n "$src" ]; then
+      VDIR="$src"
+      PROXY="$name"
+      break
+    fi
+  done
+  if [ -z "$VDIR" ]; then
+    for d in data/vhost.d nginx/vhost.d vhost.d; do
+      if [ -d "$d" ]; then VDIR="$d"; break; fi
+    done
+  fi
+  if [ -n "$VDIR" ]; then
+    mkdir -p "$VDIR"
+    cp "$CONF" "$VDIR/couturix.com"
+    cp "$CONF" "$VDIR/www.couturix.com"
+    echo "nginx-proxy uploads 32m → $VDIR"
+    if [ -n "$PROXY" ]; then
+      docker exec "$PROXY" nginx -s reload >/dev/null 2>&1 || docker kill -s HUP "$PROXY" >/dev/null 2>&1 || true
+    fi
+  else
+    echo "Avertissement: vhost.d nginx-proxy introuvable (413 si fichier > 1 Mo)" >&2
+  fi
+fi
+set -e
+'''
+}
+
+String healthLoop() {
+  return '''
+for i in $(seq 1 24); do
+  status=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' couturix-frontend 2>/dev/null || echo missing)
+  echo "santé couturix-frontend: $status"
+  if [ "$status" = healthy ]; then
+    exit 0
+  fi
+  sleep 5
+done
+docker logs --tail 80 couturix-frontend || true
+exit 1
+'''
+}

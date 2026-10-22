@@ -1,0 +1,110 @@
+<div class="card">
+  <h2>Recherche</h2>
+  <label class="search">
+    <mat-icon>search</mat-icon>
+    <input id="catalogue-search" type="search" [formControl]="search" placeholder="Nom du modèle..." aria-label="Nom du modèle">
+  </label>
+
+  <fieldset>
+    <legend>Catégorie</legend>
+    <label><input type="checkbox" [checked]="!(filters().categories?.length)" (change)="setCategories()"> Tous les modèles <small>({{ counts()['tous'] || 0 }})</small></label>
+    @for (category of categories; track category.id) {
+      <label>
+        <input type="checkbox" [checked]="has(filters().categories, category.id)" (change)="toggleCategory(category.id)">
+        {{ category.label }} <small>({{ counts()[category.id] || 0 }})</small>
+      </label>
+    }
+  </fieldset>
+
+  <fieldset>
+    <legend>Prix (FCFA)</legend>
+    <div class="ranges">
+      <input type="range" [min]="priceMin" [max]="priceMax" step="5000" [value]="filters().minPrice ?? priceMin" (input)="setPrice('minPrice', $any($event.target).value)" aria-label="Prix minimum">
+      <input type="range" [min]="priceMin" [max]="priceMax" step="5000" [value]="filters().maxPrice ?? priceMax" (input)="setPrice('maxPrice', $any($event.target).value)" aria-label="Prix maximum">
+    </div>
+    <div class="minmax">
+      <label>Min<input type="number" [value]="filters().minPrice ?? priceMin" (change)="setPrice('minPrice', $any($event.target).value)" aria-label="Prix minimum en FCFA"></label>
+      <label>Max<input type="number" [value]="filters().maxPrice ?? priceMax" (change)="setPrice('maxPrice', $any($event.target).value)" aria-label="Prix maximum en FCFA"></label>
+    </div>
+    <p class="span">{{ formatPrice(filters().minPrice ?? priceMin) }} — {{ formatPrice(filters().maxPrice ?? priceMax) }}</p>
+  </fieldset>
+
+  <details>
+    <summary>Tissu / Matière</summary>
+    @for (item of fabrics; track item) {
+      <label><input type="checkbox" [checked]="has(filters().fabrics, item)" (change)="toggle('fabrics', item)"> {{ item }}</label>
+    }
+  </details>
+  <details>
+    <summary>Genre</summary>
+    @for (item of genders; track item) {
+      <label><input type="checkbox" [checked]="has(filters().genders, item)" (change)="toggle('genders', item)"> {{ item }}</label>
+    }
+  </details>
+  <details>
+    <summary>Occasion</summary>
+    @for (item of occasions; track item) {
+      <label><input type="checkbox" [checked]="has(filters().occasions, item)" (change)="toggle('occasions', item)"> {{ item }}</label>
+    }
+  </details>
+  <details>
+    <summary>Style</summary>
+    @for (item of styles; track item) {
+      <label><input type="checkbox" [checked]="has(filters().styles, item)" (change)="toggle('styles', item)"> {{ item }}</label>
+    }
+  </details>
+  <details>
+    <summary>Taille</summary>
+    <div class="pills">
+      @for (item of sizes; track item) {
+        <button type="button" [class.on]="has(filters().sizes, item)" (click)="toggle('sizes', item)">{{ item }}</button>
+      }
+    </div>
+  </details>
+  <details>
+    <summary>Couleur</summary>
+    <div class="swatches">
+      @for (item of colors; track item.name) {
+        <button type="button" [class.on]="has(filters().colors, item.name)" [style.--swatch]="item.hex" [attr.aria-label]="item.name" [attr.aria-pressed]="has(filters().colors, item.name)" (click)="toggle('colors', item.name)"></button>
+      }
+    </div>
+  </details>
+  <details>
+    <summary>Ville</summary>
+    <select [value]="filters().city ?? ''" (change)="setCity($any($event.target).value)" aria-label="Ville">
+      <option value="">Toutes les villes</option>
+      @for (city of cities; track city) {
+        <option [value]="city">{{ city }}</option>
+      }
+    </select>
+  </details>
+  <details>
+    <summary>Atelier</summary>
+    <select [value]="filters().workshopId ?? ''" (change)="setWorkshop($any($event.target).value)" aria-label="Atelier">
+      <option value="">Rechercher un atelier...</option>
+      @for (workshop of workshops(); track workshop.id) {
+        <option [value]="workshop.id">{{ workshop.name }}</option>
+      }
+    </select>
+  </details>
+  <details>
+    <summary>Note</summary>
+    @for (item of ratings; track item.value) {
+      <label>
+        <input type="checkbox" [checked]="filters().minRating === item.value" (change)="setRating(item.value)">
+        ★ {{ item.label }}
+      </label>
+    }
+  </details>
+  <details>
+    <summary>Disponibilité</summary>
+    @for (item of availability; track item) {
+      <label><input type="checkbox" [checked]="has(filters().availability, item)" (change)="toggle('availability', item)"> {{ item }}</label>
+    }
+  </details>
+
+  <div class="actions">
+    <button type="button" class="primary" (click)="applyFilters.emit()">{{ total() ? 'Voir les ' + total() + ' modèles' : 'Appliquer les filtres' }}</button>
+    <button type="button" class="ghost" (click)="resetFilters.emit()">Réinitialiser</button>
+  </div>
+</div>

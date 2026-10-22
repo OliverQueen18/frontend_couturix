@@ -1,0 +1,95 @@
+<div class="filters">
+  <section>
+    <h2>Recherche</h2>
+    <label class="search">
+      <span class="sr">Nom de l’atelier</span>
+      <input id="atelier-filter-search" type="search" [formControl]="query" placeholder="Nom de l’atelier..." autocomplete="off">
+    </label>
+  </section>
+
+  <section>
+    <h2>Ville</h2>
+    <label class="check">
+        <input type="checkbox" [checked]="!(filters().cities?.length)" (change)="clearCities()">
+      <span>Toutes les villes <em>({{ pool() }})</em></span>
+    </label>
+    @for (city of cities; track city) {
+      <label class="check">
+        <input type="checkbox" [checked]="checked(filters().cities, city)" (change)="toggle('cities', city)">
+        <span>{{ city }} <em>({{ count(city) }})</em></span>
+      </label>
+    }
+  </section>
+
+  <section>
+    <h2>Spécialité / Services</h2>
+    @for (item of specialties; track item) {
+      <label class="check">
+        <input type="checkbox" [checked]="checked(filters().specialties, item)" (change)="toggle('specialties', item)">
+        <span>{{ item }}</span>
+      </label>
+    }
+  </section>
+
+  <details>
+    <summary>Note moyenne</summary>
+    @for (item of ratings; track item.value) {
+      <label class="check">
+        <input type="radio" name="rating" [checked]="filters().minRating === item.value" (change)="setRating(item.value)">
+        <span><b>★</b> {{ item.label }}</span>
+      </label>
+    }
+  </details>
+
+  <details>
+    <summary>Fourchette de prix</summary>
+    <label class="price">
+      Prix minimum
+      <input type="number" [min]="priceMin" [max]="priceMax" step="5000" [value]="filters().minPrice ?? 0" (change)="onPrice('min', $event)" aria-label="Prix minimum">
+    </label>
+    <label class="price">
+      Prix maximum
+      <input type="number" [min]="priceMin" [max]="priceMax" step="5000" [value]="filters().maxPrice ?? priceMax" (change)="onPrice('max', $event)" aria-label="Prix maximum">
+    </label>
+    <input class="range" type="range" [min]="priceMin" [max]="priceMax" step="5000" [value]="filters().minPrice ?? 0" (change)="onPrice('min', $event)" aria-label="Prix minimum">
+    <input class="range" type="range" [min]="priceMin" [max]="priceMax" step="5000" [value]="filters().maxPrice ?? priceMax" (change)="onPrice('max', $event)" aria-label="Prix maximum">
+    <p class="money">{{ formatPrice(filters().minPrice ?? 0) }} — {{ formatPrice(filters().maxPrice ?? priceMax) }}</p>
+  </details>
+
+  <details>
+    <summary>Disponibilité</summary>
+    @for (item of availability; track item) {
+      <label class="check">
+        <input type="checkbox" [checked]="checked(filters().availability, item)" (change)="toggle('availability', item)">
+        <span>{{ item }}</span>
+      </label>
+    }
+  </details>
+
+  <details>
+    <summary>Type d’atelier</summary>
+    @for (item of types; track item) {
+      <label class="check">
+        <input type="checkbox" [checked]="checked(filters().workshopTypes, item)" (change)="toggle('workshopTypes', item)">
+        <span>{{ item }}</span>
+      </label>
+    }
+  </details>
+
+  <details>
+    <summary>Statut</summary>
+    @for (item of statuses; track item.id) {
+      <label class="check">
+        <input type="checkbox" [checked]="checked(filters().statuses, item.id)" (change)="toggle('statuses', item.id)">
+        <span>{{ item.label }}</span>
+      </label>
+    }
+  </details>
+
+  <div class="actions">
+    <button type="button" class="primary" (click)="applyFilters.emit()">
+      {{ applyLabel() }}
+    </button>
+    <button type="button" class="ghost" (click)="resetFilters.emit()">Réinitialiser</button>
+  </div>
+</div>

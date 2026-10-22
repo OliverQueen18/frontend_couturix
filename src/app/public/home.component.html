@@ -1,0 +1,307 @@
+<div class="landing">
+  <app-public-nav />
+
+  <section class="hero">
+    <div class="hero-grid">
+      <section class="hero-copy" aria-label="Présentation">
+        <p class="kicker">La couture, autrement</p>
+        <h1>La plateforme élégante pour publier et gérer votre <em>atelier de couture.</em></h1>
+        <p class="lead">
+          CouturiX aide les ateliers de couture à se digitaliser. Créez votre compte, publiez vos services et modèles,
+          gérez vos clients, commandes, mesures, caisse et l’activité de votre équipe — au Mali et en Afrique de l’Ouest.
+        </p>
+        <form id="recherche" class="search" (ngSubmit)="search()">
+          <mat-icon>search</mat-icon>
+          <input id="atelier-search" name="q" [(ngModel)]="q" placeholder="Un atelier, une ville, un bazin, une robe…" aria-label="Rechercher">
+          <select name="city" [(ngModel)]="city" aria-label="Ville">
+            <option value="">Toutes les villes</option>
+            @for (item of cities; track item) {
+              <option [value]="item">{{ item }}</option>
+            }
+          </select>
+          <button type="submit">Rechercher</button>
+        </form>
+        <ul class="stats">
+          @for (stat of stats; track stat.label) {
+            <li>
+              <strong>{{ stat.value }}</strong>
+              <span>{{ stat.label }}</span>
+            </li>
+          }
+        </ul>
+      </section>
+
+      <section class="hero-slider" aria-roledescription="carousel" aria-label="Bannières"
+               (mouseenter)="pauseSlides()" (mouseleave)="startSlides()">
+        @for (slide of banners; track slide.id; let i = $index) {
+          <article class="slide" [class.on]="i === slideIndex" [attr.aria-hidden]="i !== slideIndex">
+            <img [src]="slide.image" [alt]="slide.title">
+            <div class="slide-copy">
+              <p>{{ slide.kicker }}</p>
+              <h2>{{ slide.title }}</h2>
+              <p>{{ slide.text }}</p>
+              <a class="btn btn-pink" [routerLink]="slide.link">{{ slide.cta }}</a>
+            </div>
+          </article>
+        }
+        <button type="button" class="slide-nav prev" (click)="step(-1)" aria-label="Bannière précédente">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <button type="button" class="slide-nav next" (click)="step(1)" aria-label="Bannière suivante">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+        <div class="slide-dots">
+          @for (slide of banners; track slide.id; let i = $index) {
+            <button type="button" [class.on]="i === slideIndex" (click)="goSlide(i)"
+                    [attr.aria-label]="'Afficher la bannière ' + (i + 1)"></button>
+          }
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <section class="band" id="fonctionnalites">
+    <div class="wrap">
+      <p class="kicker dark">Tout ce qu’il vous faut</p>
+      <h2>Une solution complète pour votre atelier</h2>
+      <div class="features">
+        <article>
+          <span class="ico rose"><mat-icon>storefront</mat-icon></span>
+          <h3>Publication de l’atelier</h3>
+          <p>Créez votre vitrine, présentez vos modèles, bazin, bogolan et réalisations, et soyez visible auprès de nouveaux clients.</p>
+        </article>
+        <article>
+          <span class="ico violet"><mat-icon>shopping_bag</mat-icon></span>
+          <h3>Gestion des commandes</h3>
+          <p>Suivez chaque commande de A à Z : statuts, délais, historique et encaissements en FCFA.</p>
+        </article>
+        <article>
+          <span class="ico blue"><mat-icon>straighten</mat-icon></span>
+          <h3>Suivi des mesures</h3>
+          <p>Enregistrez les mensurations de vos clients et retrouvez-les pour chaque robe, tenue ou retouche.</p>
+        </article>
+        <article>
+          <span class="ico green"><mat-icon>payments</mat-icon></span>
+          <h3>Caisse et activité</h3>
+          <p>Ventes, dépenses, recettes et chiffre d’affaires : la santé de l’atelier reste lisible.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="band alt">
+    <div class="wrap">
+      <div class="head">
+        <div>
+          <h2>Les meilleurs ateliers en vedette</h2>
+          <p>Découvrez les maisons les mieux notées, de Bamako à Mopti.</p>
+        </div>
+        <a routerLink="/ateliers">Voir tous les ateliers <mat-icon>arrow_forward</mat-icon></a>
+      </div>
+      @if (ateliersLoading) {
+        <div class="cards sk" aria-hidden="true">
+          @for (slot of skeletons; track slot) {
+            <div class="sk-card"><i></i><b></b><b class="short"></b></div>
+          }
+        </div>
+      } @else {
+        <div class="cards">
+          @for (workshop of spotlight; track workshop.id) {
+            <a class="card" [routerLink]="workshopLink(workshop)" [queryParams]="workshopQuery(workshop)">
+              <div class="shot">
+                <img [src]="workshop.image" [alt]="workshop.name" [class.logo]="workshop.logo" (error)="imgFallback($event)">
+                @if (workshop.badge) {
+                  <span class="badge" [class.gold]="workshop.badge === 'Top noté'">{{ workshop.badge }}</span>
+                }
+              </div>
+              <div class="card-body">
+                <h3>{{ workshop.name }}</h3>
+                <p class="where"><mat-icon>location_on</mat-icon> {{ workshop.city }}</p>
+                <p class="spec">{{ workshop.specialty }}</p>
+                <app-stars [value]="workshop.rating" [count]="workshop.reviewCount" [showScore]="true" />
+                <span class="ghost">Voir le profil</span>
+              </div>
+            </a>
+          }
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <div class="head">
+        <div>
+          <h2>Dernières publications</h2>
+          <p>Bazin, bogolan, robes de soirée, mode homme et retouches — les créations du moment.</p>
+        </div>
+        <a routerLink="/catalogue">Voir toutes les publications <mat-icon>arrow_forward</mat-icon></a>
+      </div>
+      @if (publicationsLoading) {
+        <div class="cards pubs sk" aria-hidden="true">
+          @for (slot of skeletons; track slot) {
+            <div class="sk-card wide"><i></i><b></b><b class="short"></b></div>
+          }
+        </div>
+      } @else {
+        <div class="cards pubs">
+          @for (post of publications; track post.id) {
+            <a class="card" [routerLink]="['/catalogue']">
+              <div class="shot wide">
+                <img [src]="post.image" [alt]="post.title" (error)="imgFallback($event)">
+              </div>
+              <div class="card-body">
+                <h3>{{ post.title }}</h3>
+                <p class="where">{{ post.workshopName }}</p>
+                <p class="spec">{{ post.description }}</p>
+                <p class="meta"><span>{{ post.date }}</span><span><mat-icon>favorite</mat-icon> {{ post.likes }}</span></p>
+              </div>
+            </a>
+          }
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="band alt" id="partenaires">
+    <div class="wrap">
+      <div class="head">
+        <div>
+          <h2>Espaces publicitaires</h2>
+          <p>Faites connaître votre marque auprès d’une communauté passionnée par la couture.</p>
+        </div>
+        <a routerLink="/" fragment="contact">Devenir partenaire <mat-icon>arrow_forward</mat-icon></a>
+      </div>
+      <div class="ads">
+        @if (banner) {
+          <article class="banner">
+            <p class="kicker">Espace premium</p>
+            <h3>{{ banner.title }}</h3>
+            <p>{{ banner.description }}</p>
+            <a routerLink="/" fragment="contact" class="btn btn-pink">{{ banner.cta }}</a>
+          </article>
+        }
+        <div class="ad-stack">
+          @for (ad of adCards; track ad.id) {
+            <article>
+              @if (ad.sponsor) { <p class="sponsor">{{ ad.sponsor }}</p> }
+              <h3>{{ ad.title }}</h3>
+              <p>{{ ad.description }}</p>
+              <a routerLink="/" fragment="contact">{{ ad.cta }} <mat-icon>arrow_forward</mat-icon></a>
+            </article>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="tarifs">
+    <div class="wrap">
+      <p class="kicker dark">Abonnements</p>
+      <h2>Des offres adaptées à tous les ateliers</h2>
+      <p class="sub">Choisissez le plan adapté à votre activité. Tous les tarifs sont en FCFA.</p>
+      <div class="billing">
+        <button type="button" [class.on]="!yearly" (click)="yearly = false">Mensuel</button>
+        <button type="button" [class.on]="yearly" (click)="yearly = true">Annuel</button>
+        <span>-20%</span>
+      </div>
+      <div class="plans">
+        @for (plan of plans; track plan.code) {
+          <article [class.popular]="plan.popular" (click)="openPlan(plan)">
+            @if (plan.popular) { <p class="pop">Le plus populaire</p> }
+            <h3>{{ plan.name }}</h3>
+            <p class="price">{{ planPrice(plan.priceMonthly) }} <small>/ mois</small></p>
+            @if (yearly && plan.priceMonthly) {
+              <p class="year-note">Facturé à l’année, soit {{ planPrice(plan.priceMonthly * 12) }} / an</p>
+            }
+            <p class="sub">{{ plan.description }}</p>
+            <ul>
+              @for (feature of plan.features; track feature) {
+                <li><mat-icon>check</mat-icon> {{ feature }}</li>
+              }
+            </ul>
+            <button type="button" class="btn" [class.btn-pink]="plan.popular" [class.btn-line]="!plan.popular"
+                    (click)="$event.stopPropagation(); openPlan(plan)">Voir le détail</button>
+          </article>
+        }
+      </div>
+      <ul class="perks">
+        <li><mat-icon>lock_open</mat-icon><span><strong>Sans engagement</strong> Résiliez à tout moment</span></li>
+        <li><mat-icon>verified_user</mat-icon><span><strong>Paiement sécurisé</strong> Vos données sont protégées</span></li>
+        <li><mat-icon>support_agent</mat-icon><span><strong>Support réactif</strong> Une équipe à votre écoute</span></li>
+        <li><mat-icon>trending_up</mat-icon><span><strong>Visibilité</strong> Développez votre clientèle</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="band alt" id="a-propos">
+    <div class="wrap">
+      <h2>Comment ça marche ?</h2>
+      <ol class="steps">
+        <li>
+          <span>1</span>
+          <h3>Créer un compte</h3>
+          <p>Inscrivez votre atelier en quelques clics.</p>
+        </li>
+        <li>
+          <span>2</span>
+          <h3>Publier votre atelier</h3>
+          <p>Ajoutez vos services, créations, modèles et photos.</p>
+        </li>
+        <li>
+          <span>3</span>
+          <h3>Gérer votre activité</h3>
+          <p>Commandes, clients, mesures, caisse et revenus, au même endroit.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="finale" id="contact">
+    <div class="wrap finale-inner">
+      <div>
+        <h2>Développez votre atelier avec CouturiX</h2>
+        <p>Rejoignez une communauté d’ateliers passionnés et donnez une nouvelle dimension à votre savoir-faire.</p>
+      </div>
+      <a routerLink="/inscription" class="btn btn-pink">Créer mon atelier maintenant</a>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="wrap foot-grid">
+      <div>
+        <img src="logo-couturix.png" alt="CouturiX">
+        <p>La plateforme digitale des ateliers de couture.</p>
+      </div>
+      <div>
+        <p>Plateforme</p>
+        <a routerLink="/">Accueil</a>
+        <a routerLink="/ateliers">Ateliers</a>
+        <a routerLink="/catalogue">Catalogue</a>
+        <a routerLink="/" fragment="tarifs">Tarifs</a>
+      </div>
+      <div>
+        <p>Entreprise</p>
+        <a routerLink="/" fragment="a-propos">À propos</a>
+        <a routerLink="/" fragment="contact">Contact</a>
+        <a routerLink="/" fragment="partenaires">Partenaires</a>
+      </div>
+      <div>
+        <p>Légal</p>
+        <a routerLink="/" fragment="contact">Conditions d’utilisation</a>
+        <a routerLink="/" fragment="contact">Politique de confidentialité</a>
+      </div>
+    </div>
+    <div class="wrap foot-base">
+      <span>© CouturiX. Tous droits réservés.</span>
+      <span class="socials">
+        <a href="https://facebook.com" target="_blank" rel="noopener" aria-label="Facebook">Fb</a>
+        <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram">Ig</a>
+        <a href="https://www.tiktok.com" target="_blank" rel="noopener" aria-label="TikTok">Tk</a>
+        <a href="https://www.linkedin.com" target="_blank" rel="noopener" aria-label="LinkedIn">In</a>
+        <a href="https://youtube.com" target="_blank" rel="noopener" aria-label="YouTube">Yt</a>
+      </span>
+      <span>Simple · Élégant · Rentable</span>
+    </div>
+  </footer>
+</div>

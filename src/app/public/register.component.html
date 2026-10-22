@@ -1,0 +1,151 @@
+<app-public-nav />
+
+<section class="register-page">
+  <div class="register-shell">
+    <aside class="register-aside">
+      <p class="eyebrow">Inscription atelier</p>
+      <h1>Ouvrez votre espace CouturiX</h1>
+      @if (selectedOffer; as offer) {
+        <p>Offre {{ offer.name }} — {{ offer.limit }}, {{ offer.price }} / mois.</p>
+      } @else {
+        <p>Choisissez une offre. Un atelier ne peut être créé qu’avec un plan.</p>
+      }
+      <ol>
+        <li><strong>1</strong><span>Choisissez votre offre</span></li>
+        <li><strong>2</strong><span>Décrivez votre maison de couture</span></li>
+        <li><strong>3</strong><span>Placez-la sur la carte OpenStreetMap</span></li>
+        <li><strong>4</strong><span>Créez le compte du gérant</span></li>
+      </ol>
+    </aside>
+
+    <div class="register-card">
+    <form class="account-form" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="form-grid">
+        <div class="form-section offer-heading">
+          <mat-icon>workspace_premium</mat-icon>
+          <div class="offer-copy">
+            <span>L’offre</span>
+            <p>Choisissez l’offre de votre maison. Ce choix est obligatoire pour créer l’atelier.</p>
+          </div>
+        </div>
+        <div class="plan-picker full" [class.missing]="form.controls.plan.touched && form.controls.plan.invalid">
+          @for (offer of offers; track offer.code) {
+            <button type="button" class="plan-card" [attr.data-tone]="offer.tone"
+                    [class.on]="form.controls.plan.value === offer.code"
+                    [attr.aria-pressed]="form.controls.plan.value === offer.code" (click)="choosePlan(offer.code)">
+              <span class="plan-check" aria-hidden="true"><mat-icon>check</mat-icon></span>
+              <span class="plan-kicker">{{ offer.kicker }}</span>
+              <strong>{{ offer.name }}</strong>
+              <span class="plan-price">{{ offer.price }} <small>/ mois</small></span>
+              <span class="plan-limit">{{ offer.limit }}</span>
+              <span class="plan-more" (click)="showPlan(offer.code, $event)">Voir le détail</span>
+            </button>
+          }
+        </div>
+        @if (form.controls.plan.touched && form.controls.plan.invalid) {
+          <p class="plan-error full">Choisissez une offre pour créer l’atelier.</p>
+        }
+        <div class="form-section">
+          <mat-icon>storefront</mat-icon>
+          <span>L’atelier</span>
+        </div>
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Nom de l’atelier</mat-label>
+          <mat-icon matPrefix>business</mat-icon>
+          <input matInput formControlName="atelierNom">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Sigle</mat-label>
+          <mat-icon matPrefix>sell</mat-icon>
+          <input matInput formControlName="sigle">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>RCCM</mat-label>
+          <mat-icon matPrefix>badge</mat-icon>
+          <input matInput formControlName="rccm">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>NIF</mat-label>
+          <mat-icon matPrefix>pin</mat-icon>
+          <input matInput formControlName="nif">
+        </mat-form-field>
+        <app-phone-field class="full" formControlName="telephoneAtelier" label="Téléphone atelier" />
+
+        <div class="form-section">
+          <mat-icon>place</mat-icon>
+          <span>Adresse & carte</span>
+        </div>
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Adresse</mat-label>
+          <mat-icon matPrefix>home</mat-icon>
+          <input matInput formControlName="adresse">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Ville</mat-label>
+          <mat-icon matPrefix>location_city</mat-icon>
+          <input matInput formControlName="ville">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Pays</mat-label>
+          <mat-icon matPrefix>public</mat-icon>
+          <mat-select formControlName="pays">
+            @for (name of countryOptions(form.controls.pays.value); track name) {
+              <mat-option [value]="name">{{ name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Latitude</mat-label>
+          <mat-icon matPrefix>explore</mat-icon>
+          <input matInput type="number" formControlName="latitude">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Longitude</mat-label>
+          <mat-icon matPrefix>explore</mat-icon>
+          <input matInput type="number" formControlName="longitude">
+        </mat-form-field>
+        <app-street-map
+          [latitude]="form.controls.latitude.value"
+          [longitude]="form.controls.longitude.value"
+          [zoom]="mapZoom"
+          (coordinatesChange)="onMap($event)" />
+
+        <div class="form-section">
+          <mat-icon>person</mat-icon>
+          <span>Le compte gérant</span>
+        </div>
+        <mat-form-field appearance="outline">
+          <mat-label>Nom</mat-label>
+          <mat-icon matPrefix>badge</mat-icon>
+          <input matInput formControlName="nom">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Prénom</mat-label>
+          <mat-icon matPrefix>face</mat-icon>
+          <input matInput formControlName="prenom">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>E-mail</mat-label>
+          <mat-icon matPrefix>mail_outline</mat-icon>
+          <input matInput type="email" formControlName="email">
+        </mat-form-field>
+        <app-phone-field formControlName="telephone" label="Téléphone" />
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Mot de passe (8 caractères min.)</mat-label>
+          <mat-icon matPrefix>lock_outline</mat-icon>
+          <input matInput type="password" formControlName="password">
+        </mat-form-field>
+      </div>
+
+      <div class="form-actions">
+        <button mat-flat-button color="primary" type="submit" [disabled]="loading">
+          <mat-icon>check_circle</mat-icon>
+          Créer mon atelier
+        </button>
+        <a mat-button routerLink="/login">J’ai déjà un compte</a>
+        <button mat-button type="button" (click)="openClient()">Je suis un client</button>
+      </div>
+    </form>
+    </div>
+  </div>
+</section>

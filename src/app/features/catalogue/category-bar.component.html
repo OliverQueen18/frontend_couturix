@@ -1,0 +1,15 @@
+<div class="rail">
+  @for (category of categories; track category.id) {
+    <button
+      type="button"
+      [class.on]="active() === category.id"
+      [attr.aria-pressed]="active() === category.id"
+      (click)="picked.emit(category.id)">
+      <mat-icon>{{ category.icon }}</mat-icon>
+      <span>
+        <strong>{{ category.label }}</strong>
+        <small>{{ count(category.id) }}</small>
+      </span>
+    </button>
+  }
+</div>

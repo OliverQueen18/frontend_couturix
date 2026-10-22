@@ -1,0 +1,57 @@
+<article class="card" [class.list]="layout() === 'list'">
+  <button type="button" class="cover" (click)="openProfile()" [attr.aria-label]="'Voir le profil de ' + workshop().name">
+    @if (!photoFailed) {
+      <img
+        [src]="workshop().coverImage || 'images/workshops/default-workshop.jpg'"
+        [alt]="workshop().name"
+        width="640"
+        height="360"
+        loading="lazy"
+        (error)="photoFailed = true">
+    } @else {
+      <span class="fallback" [style.background]="workshop().tone">{{ initial() }}</span>
+    }
+    @if (badge(); as badge) {
+      <span class="badge" [attr.data-kind]="badge.kind">{{ badge.label }}</span>
+    }
+  </button>
+  <button
+    type="button"
+    class="heart"
+    [class.on]="workshop().favorite"
+    [attr.aria-pressed]="!!workshop().favorite"
+    [attr.aria-label]="workshop().favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'"
+    (click)="onFavorite($event)">
+    {{ workshop().favorite ? '♥' : '♡' }}
+  </button>
+  <div class="body">
+    <span class="logo" [style.background]="workshop().tone">
+      @if (workshop().logo) {
+        <img [src]="workshop().logo" [alt]="'Logo ' + workshop().name">
+      } @else {
+        {{ initial() }}
+      }
+    </span>
+    <div class="text">
+      <h3><button type="button" (click)="openProfile()">{{ workshop().name }}</button></h3>
+      @if (layout() === 'list' && workshop().description) {
+        <p class="desc">{{ workshop().description }}</p>
+      }
+      <p class="meta">
+        <button type="button" class="rating" (click)="openProfile()">
+          <span>★</span> {{ score() }} ({{ workshop().reviewCount }} avis)
+        </button>
+        <span class="city">📍 {{ workshop().city }}</span>
+      </p>
+      <ul class="tags">
+        @for (tag of tags(); track tag) {
+          <li>{{ tag }}</li>
+        }
+        @if (extra() > 0) {
+          <li class="more">+{{ extra() }}</li>
+        }
+      </ul>
+      <button type="button" class="profile" (click)="openProfile()">Voir le profil →</button>
+    </div>
+  </div>
+</article>

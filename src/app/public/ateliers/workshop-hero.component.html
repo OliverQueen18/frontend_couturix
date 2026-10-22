@@ -1,0 +1,41 @@
+<section class="hero">
+  <div class="copy">
+    <p class="kicker">Nos ateliers</p>
+    <h1>Trouvez l’atelier idéal <span>près de chez vous.</span></h1>
+    <p class="lead">
+      Découvrez les meilleurs ateliers de couture, comparez leurs services,
+      consultez leurs créations et contactez-les directement.
+    </p>
+    <form class="search" (ngSubmit)="submit()">
+      <label class="field">
+        <span class="sr">Rechercher un atelier, une ville ou un service</span>
+        <input
+          id="atelier-query"
+          type="search"
+          [value]="query()"
+          (input)="onQuery($event)"
+          placeholder="Rechercher un atelier, une ville ou un service..."
+          autocomplete="off">
+      </label>
+      <label class="field city">
+        <span class="sr">Ville</span>
+        <select [value]="city()" (change)="onCity($event)" aria-label="Toutes les villes">
+          <option value="">Toutes les villes</option>
+          @for (name of cities; track name) {
+            <option [value]="name">{{ name }}</option>
+          }
+        </select>
+      </label>
+      <button type="submit">Rechercher</button>
+    </form>
+  </div>
+  <div class="visual">
+    <img src="images/workshops/hero-atelier.jpg" alt="Couturière au travail dans un atelier moderne" width="960" height="540">
+    <ul class="float">
+      <li><span class="mark ok">✓</span> Des ateliers vérifiés</li>
+      <li><span class="mark star">★</span> Des avis authentiques</li>
+      <li><span class="mark cut">✂</span> Des services variés</li>
+      <li><span class="mark pin">📍</span> Dans toutes les villes</li>
+    </ul>
+  </div>
+</section>

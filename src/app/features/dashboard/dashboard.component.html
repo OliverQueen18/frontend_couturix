@@ -1,0 +1,83 @@
+<section class="page">
+  <header class="page-header">
+    <div class="page-heading">
+      <span class="page-icon"><mat-icon>dashboard</mat-icon></span>
+      <div>
+        <h1>Tableau de bord</h1>
+        <p class="muted">Le pouls de votre atelier, en un regard</p>
+      </div>
+    </div>
+    <div class="toolbar-actions">
+      <mat-button-toggle-group [(ngModel)]="period" (change)="load()">
+        <mat-button-toggle value="today">Aujourd'hui</mat-button-toggle>
+        <mat-button-toggle value="week">Semaine</mat-button-toggle>
+        <mat-button-toggle value="month">Mois</mat-button-toggle>
+        <mat-button-toggle value="quarter">Trimestre</mat-button-toggle>
+        <mat-button-toggle value="year">Année</mat-button-toggle>
+        <mat-button-toggle value="custom">Personnalisé</mat-button-toggle>
+      </mat-button-toggle-group>
+      @if (period === 'custom') {
+        <input type="date" [(ngModel)]="customFrom" (change)="load()">
+        <input type="date" [(ngModel)]="customTo" (change)="load()">
+      }
+    </div>
+  </header>
+
+  @if (loading) {
+    <mat-spinner diameter="36"></mat-spinner>
+  }
+
+  @if (data) {
+    <div class="kpi-grid">
+      <article class="kpi-card">
+        <div class="kpi-top"><span class="kpi-icon"><mat-icon>payments</mat-icon></span><div class="label">Chiffre d'affaires</div></div>
+        <div class="value">{{ money(data.chiffreAffaires) }}</div>
+      </article>
+      <article class="kpi-card gold">
+        <div class="kpi-top"><span class="kpi-icon"><mat-icon>trending_down</mat-icon></span><div class="label">Dépenses</div></div>
+        <div class="value">{{ money(data.depenses) }}</div>
+      </article>
+      <article class="kpi-card purple">
+        <div class="kpi-top"><span class="kpi-icon"><mat-icon>savings</mat-icon></span><div class="label">Bénéfice</div></div>
+        <div class="value">{{ money(data.benefice) }}</div>
+      </article>
+      <article class="kpi-card">
+        <div class="kpi-top"><span class="kpi-icon"><mat-icon>receipt_long</mat-icon></span><div class="label">Commandes</div></div>
+        <div class="value">{{ data.commandes | number }}</div>
+      </article>
+      <article class="kpi-card">
+        <div class="kpi-top"><span class="kpi-icon"><mat-icon>schedule</mat-icon></span><div class="label">Retards</div></div>
+        <div class="value">{{ data.retards | number }}</div>
+      </article>
+      <article class="kpi-card">
+        <div class="kpi-top"><span class="kpi-icon"><mat-icon>group_add</mat-icon></span><div class="label">Nouveaux clients</div></div>
+        <div class="value">{{ data.nouveauxClients | number }}</div>
+      </article>
+      <article class="kpi-card gold">
+        <div class="kpi-top"><span class="kpi-icon"><mat-icon>inventory_2</mat-icon></span><div class="label">Stock faible</div></div>
+        <div class="value">{{ data.stockFaible | number }}</div>
+      </article>
+      <article class="kpi-card purple">
+        <div class="kpi-top"><span class="kpi-icon"><mat-icon>point_of_sale</mat-icon></span><div class="label">Solde caisse</div></div>
+        <div class="value">{{ money(data.soldeCaisse) }}</div>
+      </article>
+    </div>
+
+    <div class="card-block">
+      <div class="form-section" style="margin-top:0">
+        <mat-icon>content_cut</mat-icon>
+        <span>Production par tailleur</span>
+      </div>
+      @for (row of data.productionParTailleur ?? []; track $index) {
+        <div class="bar-row">
+          <span>{{ label(row) }}</span>
+          <div class="bar-track"><div class="bar-fill" [style.width.%]="((row.count ?? row.productions ?? 0) / maxProd()) * 100"></div></div>
+          <strong>{{ row.count ?? row.productions }}</strong>
+        </div>
+      }
+      @if (!(data.productionParTailleur?.length)) {
+        <p class="muted">Aucune production sur la période.</p>
+      }
+    </div>
+  }
+</section>

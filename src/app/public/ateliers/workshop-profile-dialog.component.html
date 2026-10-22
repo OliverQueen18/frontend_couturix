@@ -1,0 +1,86 @@
+<article class="sheet" role="document" [attr.aria-label]="workshop.name">
+  <button type="button" class="close" (click)="close()" aria-label="Fermer le profil">×</button>
+  <div class="cover">
+    @if (!photoFailed) {
+      <img
+        [src]="workshop.coverImage || 'images/workshops/default-workshop.jpg'"
+        [alt]="workshop.name"
+        (error)="photoFailed = true">
+    } @else {
+      <span class="fallback" [style.background]="workshop.tone">{{ initial() }}</span>
+    }
+    @if (badge) {
+      <span class="badge" [attr.data-kind]="badge.kind">{{ badge.label }}</span>
+    }
+  </div>
+
+  <div class="content">
+    <header>
+      <span class="logo" [style.background]="workshop.tone">
+        @if (workshop.logo) {
+          <img [src]="workshop.logo" [alt]="'Logo ' + workshop.name">
+        } @else {
+          {{ initial() }}
+        }
+      </span>
+      <div>
+        <h2>{{ workshop.name }}</h2>
+        <p class="where">📍 {{ workshop.city }}@if (workshop.district) { · {{ workshop.district }} }</p>
+        <p class="rating"><span>★</span> {{ score() }} ({{ workshop.reviewCount }} avis)</p>
+      </div>
+    </header>
+
+    @if (workshop.description) {
+      <p class="lead">{{ workshop.description }}</p>
+    }
+
+    @if (workshop.specialties.length) {
+      <ul class="tags">
+        @for (tag of workshop.specialties; track tag) {
+          <li>{{ tag }}</li>
+        }
+      </ul>
+    }
+
+    <dl>
+      @if (workshop.type) {
+        <div><dt>Type</dt><dd>{{ workshop.type }}</dd></div>
+      }
+      @if (workshop.priceMin != null) {
+        <div><dt>Prestations</dt><dd>{{ formatPrice(workshop.priceMin) }} – {{ formatPrice(workshop.priceMax) }}</dd></div>
+      }
+      @if (workshop.availability?.length) {
+        <div><dt>Disponibilité</dt><dd>{{ workshop.availability?.join(' · ') }}</dd></div>
+      }
+    </dl>
+
+    <div class="actions">
+      <a class="primary" [routerLink]="['/catalogue']" [queryParams]="{ atelier: workshop.slug }" (click)="close()">Voir le catalogue</a>
+      @if (workshop.phone) {
+        <a class="ghost" [href]="'tel:' + workshop.phone">{{ workshop.phone }}</a>
+      }
+      @if (whatsapp()) {
+        <a class="ghost" [href]="'https://wa.me/' + whatsapp()" target="_blank" rel="noopener">WhatsApp</a>
+      }
+    </div>
+
+    <section class="avis">
+      <h3>Avis</h3>
+      @if (!workshop.remote) {
+        <p>Note moyenne fondée sur {{ workshop.reviewCount }} avis. Le dépôt d’avis en ligne s’ouvre pour les maisons publiées.</p>
+      } @else if (!avis().length) {
+        <p>Soyez le premier à laisser un avis.</p>
+      } @else {
+        <ul>
+          @for (item of avis(); track item.id) {
+            <li>
+              <strong>{{ item.auteur }}</strong>
+              <span>★ {{ item.note }}</span>
+              @if (item.commentaire) { <p>{{ item.commentaire }}</p> }
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+</article>

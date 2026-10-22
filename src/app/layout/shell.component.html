@@ -1,0 +1,47 @@
+<mat-sidenav-container class="shell">
+  <mat-sidenav opened mode="side" class="sidenav">
+    <div class="brand">
+      <img src="logo-couturix.png" alt="CouturiX">
+      <p>Maison de couture</p>
+    </div>
+    <mat-nav-list>
+      @for (group of visibleGroups(); track group.label) {
+        <p class="nav-group">{{ group.label }}</p>
+        @for (item of group.items; track item.path) {
+          <a mat-list-item [routerLink]="item.path" routerLinkActive="active">
+            <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+            <span matListItemTitle>{{ item.label }}</span>
+          </a>
+        }
+      }
+    </mat-nav-list>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <mat-toolbar class="toolbar">
+      <span class="page-icon title-badge"><mat-icon>{{ titleIcon }}</mat-icon></span>
+      <span class="page-title">{{ title }}</span>
+      <span class="spacer"></span>
+      @if (auth.user?.atelierNom) {
+        <span class="atelier-chip">
+          <mat-icon>storefront</mat-icon>
+          {{ auth.user?.atelierNom }}
+        </span>
+      }
+      <a mat-button routerLink="/">
+        <mat-icon>public</mat-icon>
+        Site public
+      </a>
+      <button mat-button [matMenuTriggerFor]="menu">
+        <mat-icon>account_circle</mat-icon>
+        {{ auth.displayName() }}
+      </button>
+      <mat-menu #menu="matMenu">
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          Déconnexion
+        </button>
+      </mat-menu>
+    </mat-toolbar>
+    <router-outlet />
+  </mat-sidenav-content>
+</mat-sidenav-container>

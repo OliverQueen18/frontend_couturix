@@ -1,0 +1,31 @@
+<div class="sheet" [attr.data-tone]="plan.tone">
+  <header>
+    <button type="button" class="close" (click)="close()" aria-label="Fermer">
+      <mat-icon>close</mat-icon>
+    </button>
+    <p class="kicker">{{ plan.kicker }}</p>
+    <h2>{{ plan.name }}</h2>
+    <p class="lead">{{ plan.description }}</p>
+    <p class="price">{{ price() }} <small>/ mois</small></p>
+    @if (data.yearly && plan.priceMonthly) {
+      <p class="year">Facturé à l’année, soit {{ yearTotal() }} / an</p>
+    }
+    <p class="limit">{{ plan.limit }}</p>
+  </header>
+  <div class="body">
+    @for (group of plan.services; track group.title) {
+      <section>
+        <h3>{{ group.title }}</h3>
+        <ul>
+          @for (item of group.items; track item) {
+            <li><mat-icon>check</mat-icon><span>{{ item }}</span></li>
+          }
+        </ul>
+      </section>
+    }
+  </div>
+  <footer>
+    <button type="button" class="ghost" (click)="close()">Fermer</button>
+    <button type="button" class="choose" (click)="choose()">{{ plan.cta }}</button>
+  </footer>
+</div>

@@ -1,0 +1,188 @@
+<div class="ateliers">
+  <app-public-nav />
+  <app-workshop-hero
+    [queryValue]="filters().query ?? ''"
+    [cityValue]="heroCity()"
+    (search)="onHero($event)" />
+
+  <div class="wrap">
+    <app-city-bar
+      [counts]="result()?.cityCounts ?? {}"
+      [total]="pool()"
+      [selected]="filters().cities ?? []"
+      (pick)="onCities($event)" />
+
+    @if (warning()) {
+      <div class="banner" role="status">
+        <p>Impossible de charger les ateliers publiés pour le moment.</p>
+        <button type="button" (click)="retry()">Réessayer</button>
+      </div>
+    }
+
+    <div class="layout">
+      @if (drawer()) {
+        <button type="button" class="backdrop" aria-label="Fermer les filtres" (click)="drawer.set(false)"></button>
+      }
+      <aside class="side" [class.open]="drawer()" aria-label="Filtres">
+        <div class="drawer-head">
+          <h2>Filtres</h2>
+          <button type="button" (click)="drawer.set(false)" aria-label="Fermer les filtres">Fermer</button>
+        </div>
+        <app-workshop-filters
+          [filters]="filters()"
+          [total]="result()?.total ?? 0"
+          [pool]="pool()"
+          [counts]="result()?.cityCounts ?? {}"
+          (changed)="commit($event)"
+          (applyFilters)="closeDrawer()"
+          (resetFilters)="reset()" />
+      </aside>
+
+      <section id="resultats">
+        <div class="mobile-tools">
+          <button type="button" (click)="drawer.set(true)" [attr.aria-expanded]="drawer()">
+            Filtres ({{ chips().length }})
+          </button>
+          <label>
+            <span class="sr">Trier</span>
+            <select [value]="filters().sort" (change)="onSort($event)" aria-label="Trier">
+              @for (item of sorts; track item.id) {
+                <option [value]="item.id">{{ item.label }}</option>
+              }
+            </select>
+          </label>
+        </div>
+
+        <div class="toolbar">
+          <h2>{{ loading() ? 'Chargement des ateliers…' : foundLabel() }}</h2>
+          <div class="tools">
+            <label>
+              Trier par
+              <select [value]="filters().sort" (change)="onSort($event)" aria-label="Trier par">
+                @for (item of sorts; track item.id) {
+                  <option [value]="item.id">{{ item.label }}</option>
+                }
+              </select>
+            </label>
+            <button type="button" [attr.aria-pressed]="layout() === 'grid'" aria-label="Vue grille" [class.on]="layout() === 'grid'" (click)="layout.set('grid')">▦</button>
+            <button type="button" [attr.aria-pressed]="layout() === 'list'" aria-label="Vue liste" [class.on]="layout() === 'list'" (click)="layout.set('list')">☰</button>
+          </div>
+        </div>
+
+        @if (chips().length) {
+          <ul class="chips">
+            @for (chip of chips(); track chip.key + chip.label) {
+              <li>
+                <button type="button" (click)="removeChip(chip)">{{ chip.label }} ×</button>
+              </li>
+            }
+            @if (chips().length > 1) {
+              <li><button type="button" class="clear" (click)="reset()">Tout effacer</button></li>
+            }
+          </ul>
+        }
+
+        @if (loading()) {
+          <div class="grid" aria-hidden="true">
+            @for (item of skeletons; track item) {
+              <div class="skeleton">
+                <span class="photo"></span>
+                <span class="line logo"></span>
+                <span class="line name"></span>
+                <span class="line"></span>
+                <span class="line short"></span>
+                <span class="line button"></span>
+              </div>
+            }
+          </div>
+        } @else if (rows() === null) {
+          <div class="empty">
+            <h3>Impossible de charger les ateliers pour le moment.</h3>
+            <button type="button" (click)="retry()">Réessayer</button>
+          </div>
+        } @else if (!(result()?.total)) {
+          <div class="empty">
+            <h3>Aucun atelier trouvé</h3>
+            <p>Essayez de modifier vos critères de recherche.</p>
+            <button type="button" (click)="reset()">Réinitialiser les filtres</button>
+          </div>
+        } @else {
+          <div class="grid" [class.list]="layout() === 'list'">
+            @for (workshop of result()?.items ?? []; track workshop.slug) {
+              <app-workshop-card [workshop]="workshop" [layout]="layout()" (favorite)="onFavorite($event)" />
+            }
+          </div>
+          <div class="pager">
+            <nav aria-label="Pagination">
+              <button type="button" (click)="go((result()?.page ?? 1) - 1)" [disabled]="(result()?.page ?? 1) <= 1" aria-label="Page précédente">‹</button>
+              @for (page of pageList(); track $index) {
+                @if (page === '…') {
+                  <span>…</span>
+                } @else {
+                  <button type="button" [class.on]="result()?.page === page" (click)="go(+page)">{{ page }}</button>
+                }
+              }
+              <button type="button" (click)="go((result()?.page ?? 1) + 1)" [disabled]="(result()?.page ?? 1) >= (result()?.pages ?? 1)" aria-label="Page suivante">›</button>
+            </nav>
+            <label>
+              <select [value]="filters().pageSize" (change)="onPageSize($event)" aria-label="Ateliers par page">
+                <option [value]="8">8 ateliers par page</option>
+                <option [value]="16">16 ateliers par page</option>
+                <option [value]="24">24 ateliers par page</option>
+                <option [value]="48">48 ateliers par page</option>
+              </select>
+            </label>
+          </div>
+        }
+      </section>
+    </div>
+  </div>
+
+  <footer class="foot">
+    <div class="wrap foot-grid">
+      <div>
+        <img src="logo-couturix.png" alt="CouturiX">
+        <p>La plateforme digitale des ateliers de couture.</p>
+        <p class="socials">
+          <a href="https://facebook.com" target="_blank" rel="noopener" aria-label="Facebook">Fb</a>
+          <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram">Ig</a>
+          <a href="https://www.tiktok.com" target="_blank" rel="noopener" aria-label="TikTok">Tk</a>
+          <a href="https://youtube.com" target="_blank" rel="noopener" aria-label="YouTube">Yt</a>
+          <a href="https://www.linkedin.com" target="_blank" rel="noopener" aria-label="LinkedIn">In</a>
+        </p>
+      </div>
+      <div>
+        <p>Plateforme</p>
+        <a routerLink="/">Accueil</a>
+        <a routerLink="/ateliers">Ateliers</a>
+        <a routerLink="/catalogue">Catalogue</a>
+        <a routerLink="/" fragment="tarifs">Tarifs</a>
+      </div>
+      <div>
+        <p>Entreprise</p>
+        <a routerLink="/" fragment="a-propos">À propos</a>
+        <a routerLink="/" fragment="contact">Contact</a>
+        <a routerLink="/" fragment="partenaires">Partenaires</a>
+        <a routerLink="/" fragment="a-propos">Blog</a>
+      </div>
+      <div>
+        <p>Aide</p>
+        <a routerLink="/" fragment="contact">Centre d’aide</a>
+        <a routerLink="/" fragment="contact">Conditions d’utilisation</a>
+        <a routerLink="/" fragment="contact">Politique de confidentialité</a>
+      </div>
+      <form (ngSubmit)="subscribe()">
+        <p>Newsletter</p>
+        <span>Recevez nos actualités et nouveautés.</span>
+        <label class="sr" for="atelier-news">Votre email</label>
+        <input id="atelier-news" type="email" name="email" placeholder="Votre email" [(ngModel)]="email" autocomplete="email">
+        <button type="submit">S’abonner</button>
+        @if (note) { <small>{{ note }}</small> }
+      </form>
+    </div>
+    <div class="wrap foot-base">
+      <span>© {{ year }} CouturiX. Tous droits réservés.</span>
+      <span>Simple · Élégant · Rentable</span>
+    </div>
+  </footer>
+</div>

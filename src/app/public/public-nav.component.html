@@ -1,0 +1,29 @@
+<header class="bar" [class.is-stuck]="scrolled">
+  <a routerLink="/" class="brand" aria-label="CouturiX, accueil">
+    <img src="logo-couturix.png" alt="">
+  </a>
+  <button type="button" class="burger" (click)="menuOpen = !menuOpen" [attr.aria-expanded]="menuOpen" aria-label="Menu">
+    <mat-icon>{{ menuOpen ? 'close' : 'menu' }}</mat-icon>
+  </button>
+  <div class="bar-links" [class.open]="menuOpen">
+    <nav>
+      <a routerLink="/" routerLinkActive="is-on" [routerLinkActiveOptions]="{ exact: true }" (click)="menuOpen = false">Accueil</a>
+      <a routerLink="/ateliers" routerLinkActive="is-on" (click)="menuOpen = false">Ateliers</a>
+      <a routerLink="/catalogue" routerLinkActive="is-on" (click)="menuOpen = false">Catalogue</a>
+      <a routerLink="/" fragment="tarifs" (click)="menuOpen = false">Tarifs</a>
+      <a routerLink="/" fragment="a-propos" (click)="menuOpen = false">À propos</a>
+    </nav>
+    <div class="bar-actions">
+      <button type="button" class="icon-btn" (click)="focusSearch()" aria-label="Rechercher">
+        <mat-icon>search</mat-icon>
+      </button>
+      @if (auth.isAuthenticated()) {
+        <a class="btn btn-pink" [routerLink]="auth.homeAfterLogin()" (click)="menuOpen = false">Mon espace</a>
+      } @else {
+        <button type="button" class="text-btn" (click)="openClient()">Compte client</button>
+        <a routerLink="/login" class="btn btn-line" routerLinkActive="is-on" (click)="menuOpen = false">Connexion</a>
+        <a routerLink="/inscription" class="btn btn-pink" routerLinkActive="is-on" (click)="menuOpen = false">Créer mon atelier</a>
+      }
+    </div>
+  </div>
+</header>

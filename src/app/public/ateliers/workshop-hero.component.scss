@@ -1,0 +1,123 @@
+:host { display: block; }
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 1.5rem;
+  align-items: center;
+  min-height: 340px;
+  padding: 2.2rem 4vw 2rem;
+  color: #fff;
+  background: linear-gradient(135deg, #260838 0%, #45105e 45%, #81175f 100%);
+}
+
+.kicker {
+  margin: 0 0 0.45rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+h1 {
+  margin: 0;
+  font-family: var(--cx-display, "Cormorant Garamond", serif);
+  font-size: clamp(2.1rem, 3.6vw, 3.3rem);
+  font-weight: 600;
+  line-height: 1.05;
+}
+
+h1 span { color: #ff5c9d; }
+
+.lead {
+  max-width: 38rem;
+  margin: 0.85rem 0 1.2rem;
+  color: rgba(255, 255, 255, 0.86);
+  line-height: 1.5;
+}
+
+.search {
+  display: grid;
+  grid-template-columns: 1fr 180px auto;
+  gap: 0.55rem;
+  padding: 0.45rem;
+  background: #fff;
+  border-radius: 14px;
+}
+
+.field { display: block; }
+
+input, select, button { font: inherit; }
+
+input, select {
+  width: 100%;
+  height: 46px;
+  border: 0;
+  border-radius: 10px;
+  padding: 0 0.85rem;
+  color: #25142f;
+  background: #faf8fc;
+}
+
+button {
+  height: 46px;
+  border: 0;
+  border-radius: 10px;
+  padding: 0 1.15rem;
+  background: #eb2d78;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:hover { background: #d11f68; }
+
+.visual { position: relative; }
+
+.visual img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 18px;
+}
+
+.float {
+  position: absolute;
+  right: 0.8rem;
+  bottom: 0.8rem;
+  margin: 0;
+  padding: 0.75rem 0.85rem;
+  list-style: none;
+  background: rgba(28, 8, 40, 0.82);
+  color: #fff;
+  border-radius: 14px;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.86rem;
+}
+
+.float li { display: flex; align-items: center; gap: 0.45rem; }
+
+.mark { width: 1.1rem; text-align: center; }
+.ok { color: #3ddc97; }
+.star { color: #f5c451; }
+.cut { color: #ff8ab8; }
+.pin { color: #d7b4ff; }
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+@media (max-width: 960px) {
+  .hero { grid-template-columns: 1fr; padding: 1.4rem 1rem 1.2rem; }
+  .visual img { height: 220px; }
+  .search { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  .float { position: static; margin-top: 0.7rem; }
+}
