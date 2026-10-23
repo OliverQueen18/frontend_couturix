@@ -11,6 +11,7 @@ import { AuthService } from '../../core/auth.service';
 import { PublicNavComponent } from '../../public/public-nav.component';
 import { RegisterClientDialogService } from '../../public/register-client.component';
 import { NotifyService } from '../../core/notify.service';
+import { PasswordToggleComponent } from '../../shared/password-toggle.component';
 
 @Component({
   selector: 'app-login',
@@ -23,7 +24,8 @@ import { NotifyService } from '../../core/notify.service';
     MatIconModule,
     MatButtonModule,
     RouterLink,
-    PublicNavComponent
+    PublicNavComponent,
+    PasswordToggleComponent
   ],
   templateUrl: './login.component.html'
 })
@@ -139,18 +141,20 @@ export class ForgotPasswordDialogComponent {
 @Component({
   selector: 'app-change-password-dialog',
   standalone: true,
-  imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule],
+  imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule, PasswordToggleComponent],
   template: `
     <h2 mat-dialog-title>Changer le mot de passe</h2>
     <form [formGroup]="form" (ngSubmit)="save()">
       <mat-dialog-content class="dialog-form">
         <mat-form-field appearance="outline">
           <mat-label>Mot de passe actuel</mat-label>
-          <input matInput type="password" formControlName="currentPassword">
+          <input matInput [type]="currentPwd.inputType()" formControlName="currentPassword">
+          <app-password-toggle #currentPwd matSuffix />
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Nouveau mot de passe</mat-label>
-          <input matInput type="password" formControlName="newPassword">
+          <input matInput [type]="newPwd.inputType()" formControlName="newPassword">
+          <app-password-toggle #newPwd matSuffix />
         </mat-form-field>
       </mat-dialog-content>
       <mat-dialog-actions align="end">

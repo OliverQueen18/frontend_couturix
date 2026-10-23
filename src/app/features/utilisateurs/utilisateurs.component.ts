@@ -14,12 +14,13 @@ import { AuthService } from '../../core/auth.service';
 import { requireValid } from '../../core/forms';
 import { ALL_ROLES, AppUser, PageResponse, ROLE_LABELS } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
+import { PasswordToggleComponent } from '../../shared/password-toggle.component';
 import { PhoneFieldComponent } from '../../shared/phone-field.component';
 
 @Component({
   selector: 'app-user-form-dialog',
   standalone: true,
-  imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule, MatSlideToggleModule, MatIconModule, PhoneFieldComponent],
+  imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule, MatSlideToggleModule, MatIconModule, PhoneFieldComponent, PasswordToggleComponent],
   template: `
     <h2 mat-dialog-title class="dialog-title">
       <span class="dialog-icon"><mat-icon>manage_accounts</mat-icon></span>
@@ -35,7 +36,7 @@ import { PhoneFieldComponent } from '../../shared/phone-field.component';
           <mat-form-field appearance="outline"><mat-label>E-mail</mat-label><mat-icon matPrefix>mail_outline</mat-icon><input matInput formControlName="email"></mat-form-field>
           <app-phone-field formControlName="telephone" label="Téléphone" />
           @if (!data) {
-            <mat-form-field appearance="outline" class="full"><mat-label>Mot de passe</mat-label><mat-icon matPrefix>lock_outline</mat-icon><input matInput type="password" formControlName="password"></mat-form-field>
+            <mat-form-field appearance="outline" class="full"><mat-label>Mot de passe</mat-label><mat-icon matPrefix>lock_outline</mat-icon><input matInput [type]="pwd.inputType()" formControlName="password"><app-password-toggle #pwd matSuffix /></mat-form-field>
           }
           <mat-form-field appearance="outline" class="full"><mat-label>Rôles</mat-label>
             <mat-icon matPrefix>admin_panel_settings</mat-icon>

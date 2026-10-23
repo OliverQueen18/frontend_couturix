@@ -133,7 +133,8 @@
         <mat-form-field appearance="outline" class="full">
           <mat-label>Mot de passe (8 caractères min.)</mat-label>
           <mat-icon matPrefix>lock_outline</mat-icon>
-          <input matInput type="password" formControlName="password">
+          <input matInput [type]="pwd.inputType()" formControlName="password">
+          <app-password-toggle #pwd matSuffix />
         </mat-form-field>
       </div>
 

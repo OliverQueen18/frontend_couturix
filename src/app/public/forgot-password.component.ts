@@ -6,12 +6,13 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { AuthService } from '../core/auth.service';
 import { NotifyService } from '../core/notify.service';
+import { PasswordToggleComponent } from '../shared/password-toggle.component';
 import { PublicNavComponent } from './public-nav.component';
 
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, MatButtonModule, MatFormFieldModule, MatInputModule, PublicNavComponent],
+  imports: [ReactiveFormsModule, RouterLink, MatButtonModule, MatFormFieldModule, MatInputModule, PublicNavComponent, PasswordToggleComponent],
   template: `
     <app-public-nav />
     <section class="register-page">
@@ -40,7 +41,8 @@ import { PublicNavComponent } from './public-nav.component';
               </mat-form-field>
               <mat-form-field appearance="outline" class="full">
                 <mat-label>Nouveau mot de passe</mat-label>
-                <input matInput type="password" formControlName="newPassword">
+                <input matInput [type]="pwd.inputType()" formControlName="newPassword">
+                <app-password-toggle #pwd matSuffix />
               </mat-form-field>
             </div>
             <div class="form-actions">

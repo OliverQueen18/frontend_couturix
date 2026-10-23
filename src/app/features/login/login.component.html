@@ -19,7 +19,8 @@
       <mat-form-field appearance="outline">
         <mat-label>Mot de passe</mat-label>
         <mat-icon matPrefix>lock_outline</mat-icon>
-        <input matInput type="password" formControlName="password" autocomplete="current-password">
+        <input matInput [type]="pwd.inputType()" formControlName="password" autocomplete="current-password">
+        <app-password-toggle #pwd matSuffix />
         @if (form.controls.password.touched && form.controls.password.hasError('required')) {
           <mat-error>Mot de passe obligatoire</mat-error>
         }

@@ -14,6 +14,7 @@ import { AuthService } from '../core/auth.service';
 import { GeoPoint } from '../core/models';
 import { NotifyService } from '../core/notify.service';
 import { BAMAKO, DEFAULT_COUNTRY, countryOptions, mapZoomFor } from '../shared/countries';
+import { PasswordToggleComponent } from '../shared/password-toggle.component';
 import { PhoneFieldComponent } from '../shared/phone-field.component';
 import { StreetMapComponent } from '../shared/street-map.component';
 
@@ -30,6 +31,7 @@ import { StreetMapComponent } from '../shared/street-map.component';
     MatIconModule,
     MatSelectModule,
     PhoneFieldComponent,
+    PasswordToggleComponent,
     StreetMapComponent
   ],
   template: `
@@ -61,7 +63,8 @@ import { StreetMapComponent } from '../shared/street-map.component';
           <mat-form-field appearance="outline" class="full">
             <mat-label>Mot de passe</mat-label>
             <mat-icon matPrefix>lock_outline</mat-icon>
-            <input matInput type="password" formControlName="password">
+            <input matInput [type]="pwd.inputType()" formControlName="password">
+            <app-password-toggle #pwd matSuffix />
           </mat-form-field>
           <app-phone-field class="full" formControlName="telephone" label="Téléphone" />
           <mat-form-field appearance="outline" class="full">

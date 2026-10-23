@@ -12,6 +12,7 @@ import { AuthService } from '../core/auth.service';
 import { GeoPoint } from '../core/models';
 import { NotifyService } from '../core/notify.service';
 import { BAMAKO, DEFAULT_COUNTRY, countryOptions, mapZoomFor } from '../shared/countries';
+import { PasswordToggleComponent } from '../shared/password-toggle.component';
 import { PhoneFieldComponent } from '../shared/phone-field.component';
 import { StreetMapComponent } from '../shared/street-map.component';
 import { fcfa, HOME_PLANS } from './home.data';
@@ -34,6 +35,7 @@ const PLAN_CODES = ['GRATUIT', 'STANDARD', 'PREMIUM', 'GOLD'] as const;
     MatSelectModule,
     PublicNavComponent,
     PhoneFieldComponent,
+    PasswordToggleComponent,
     StreetMapComponent
   ],
   templateUrl: './register.component.html',

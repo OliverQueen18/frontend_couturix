@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, ElementRef, inject, viewChild } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -18,7 +18,7 @@ import { PhoneFieldComponent } from '../../shared/phone-field.component';
 @Component({
   selector: 'app-tailleur-form-dialog',
   standalone: true,
-  imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule, MatSlideToggleModule, MatIconModule, PhoneFieldComponent],
+  imports: [FormsModule, ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule, MatSlideToggleModule, MatIconModule, PhoneFieldComponent],
   template: `
     <h2 mat-dialog-title class="dialog-title">
       <span class="dialog-icon"><mat-icon>content_cut</mat-icon></span>
@@ -47,8 +47,26 @@ import { PhoneFieldComponent } from '../../shared/phone-field.component';
           <mat-form-field appearance="outline"><mat-label>Pourcentage</mat-label><mat-icon matPrefix>percent</mat-icon><input matInput type="number" formControlName="pourcentage"></mat-form-field>
           <mat-form-field appearance="outline" class="full"><mat-label>Spécialités</mat-label>
             <mat-icon matPrefix>auto_awesome</mat-icon>
-            <mat-select formControlName="specialiteIds" multiple>
-              @for (s of data.specialites; track s.id) { <mat-option [value]="s.id">{{ s.libelle }}</mat-option> }
+            <mat-select formControlName="specialiteIds" multiple panelClass="spec-panel"
+                        (openedChange)="onSpecPanel($event)">
+              <div class="spec-search" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+                <mat-icon>search</mat-icon>
+                <input #specSearch type="text" [(ngModel)]="specQuery" [ngModelOptions]="{standalone: true}"
+                       placeholder="Rechercher ou créer" autocomplete="off">
+              </div>
+              @if (canCreateSpec()) {
+                <button type="button" class="spec-create" [disabled]="creatingSpec"
+                        (mousedown)="$event.preventDefault()" (click)="createSpec()">
+                  <mat-icon>add</mat-icon>
+                  Créer « {{ specName() }} »
+                </button>
+              }
+              @for (s of filteredSpecs(); track s.id) {
+                <mat-option [value]="s.id">{{ s.libelle }}</mat-option>
+              }
+              @if (!filteredSpecs().length && !canCreateSpec()) {
+                <div class="spec-empty">Aucune spécialité</div>
+              }
             </mat-select>
           </mat-form-field>
         </div>
@@ -79,6 +97,68 @@ export class TailleurFormDialogComponent {
     specialiteIds: [this.data.tailleur?.specialiteIds ?? []],
     actif: [this.data.tailleur?.actif ?? true]
   });
+  specialites: Specialite[] = [...(this.data.specialites ?? [])];
+  specQuery = '';
+  creatingSpec = false;
+  private readonly specSearch = viewChild<ElementRef<HTMLInputElement>>('specSearch');
+
+  specName(): string {
+    return this.specQuery.trim().replace(/\s+/g, ' ');
+  }
+
+  filteredSpecs(): Specialite[] {
+    const q = this.specName().toLocaleLowerCase('fr');
+    if (!q) {
+      return this.specialites;
+    }
+    return this.specialites.filter((item) => (item.libelle ?? '').toLocaleLowerCase('fr').includes(q));
+  }
+
+  canCreateSpec(): boolean {
+    const name = this.specName();
+    if (name.length < 2) {
+      return false;
+    }
+    return !this.specialites.some((item) => (item.libelle ?? '').toLocaleLowerCase('fr') === name.toLocaleLowerCase('fr'));
+  }
+
+  onSpecPanel(open: boolean): void {
+    if (!open) {
+      return;
+    }
+    this.specQuery = '';
+    queueMicrotask(() => this.specSearch()?.nativeElement.focus());
+  }
+
+  createSpec(): void {
+    const libelle = this.specName();
+    if (!this.canCreateSpec()) {
+      return;
+    }
+    this.creatingSpec = true;
+    this.api.post<Specialite>('specialites', { libelle }).subscribe({
+      next: (created) => {
+        this.creatingSpec = false;
+        this.specialites = this.sortSpecialites([
+          ...this.specialites.filter((item) => item.id !== created.id),
+          created
+        ]);
+        const selected = new Set(this.form.controls.specialiteIds.value ?? []);
+        selected.add(created.id);
+        this.form.controls.specialiteIds.setValue([...selected]);
+        this.specQuery = '';
+        this.notify.success(`Spécialité « ${created.libelle} » créée`);
+      },
+      error: (err) => {
+        this.creatingSpec = false;
+        this.notify.error(err);
+      }
+    });
+  }
+
+  private sortSpecialites(rows: Specialite[]): Specialite[] {
+    return [...(rows ?? [])].sort((a, b) => (a.libelle ?? '').localeCompare(b.libelle ?? '', 'fr'));
+  }
 
   save(): void {
     if (!requireValid(this.form, this.notify)) {
@@ -142,14 +222,22 @@ export class TailleursComponent {
   cols = ['nom', 'mode', 'specialites', 'actif', 'actions'];
 
   constructor() {
+    this.loadSpecialites();
+    this.load();
+  }
+
+  private loadSpecialites(): void {
     this.api.get<Specialite[]>('specialites').subscribe({
-      next: (rows) => (this.specialites = rows),
+      next: (rows) => (this.specialites = this.sortSpecialites(rows)),
       error: () =>
-        this.api.get<PageResponse<Specialite>>('specialites', { size: 100 }).subscribe({
-          next: (page) => (this.specialites = page.content ?? [])
+        this.api.get<PageResponse<Specialite>>('specialites', { size: 200 }).subscribe({
+          next: (page) => (this.specialites = this.sortSpecialites(page.content ?? []))
         })
     });
-    this.load();
+  }
+
+  private sortSpecialites(rows: Specialite[]): Specialite[] {
+    return [...(rows ?? [])].sort((a, b) => (a.libelle ?? '').localeCompare(b.libelle ?? '', 'fr'));
   }
 
   load(): void {
@@ -173,6 +261,11 @@ export class TailleursComponent {
     this.dialog.open(TailleurFormDialogComponent, {
       width: '760px',
       data: { tailleur: row ?? null, specialites: this.specialites }
-    }).afterClosed().subscribe((ok) => ok && this.load());
+    }).afterClosed().subscribe((ok) => {
+      this.loadSpecialites();
+      if (ok) {
+        this.load();
+      }
+    });
   }
 }
