@@ -171,12 +171,26 @@ if [ -f "$CONF" ]; then
       if [ -d "$d" ]; then VDIR="$d"; break; fi
     done
   fi
+  ensure_body_size() {
+    local f="$1"
+    if [ -f "$f" ] && grep -q 'client_max_body_size' "$f"; then
+      sed -i 's/client_max_body_size[[:space:]]*[^;]*/client_max_body_size 32m/' "$f"
+    elif [ -f "$f" ]; then
+      echo 'client_max_body_size 32m;' >> "$f"
+    else
+      cp "$CONF" "$f"
+    fi
+  }
   if [ -n "$VDIR" ]; then
     mkdir -p "$VDIR"
     cp "$CONF" "$VDIR/couturix.com"
     cp "$CONF" "$VDIR/www.couturix.com"
+    cp "$CONF" "$VDIR/couturix.com_location"
+    cp "$CONF" "$VDIR/www.couturix.com_location"
+    ensure_body_size "$VDIR/default"
     echo "nginx-proxy uploads 32m → $VDIR"
     if [ -n "$PROXY" ]; then
+      docker exec "$PROXY" sh -c 'kill -HUP $(pgrep -f docker-gen | head -1)' >/dev/null 2>&1 || true
       docker exec "$PROXY" nginx -s reload >/dev/null 2>&1 || docker kill -s HUP "$PROXY" >/dev/null 2>&1 || true
     fi
   else
