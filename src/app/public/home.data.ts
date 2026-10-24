@@ -194,7 +194,7 @@ export const HOME_PLANS: HomePlan[] = [
     kicker: 'Découverte',
     limit: '1 atelier',
     description: 'Pour ouvrir votre maison et être visible, sans frais.',
-    features: ['Fiche publique dans l’annuaire', '1 atelier et le compte gérant', 'Demandes de contact', 'Support par e-mail'],
+    features: ['Fiche publique dans l’annuaire', '1 atelier et le compte gérant', 'Demandes de contact', 'Notifications par e-mail'],
     services: [
       {
         title: 'Présence en ligne',
@@ -223,7 +223,7 @@ export const HOME_PLANS: HomePlan[] = [
           'Les visiteurs voient vos coordonnées et peuvent vous écrire',
           'Demandes de contact reçues depuis la fiche publique',
           'Pas de carnet de commandes ni de prises de mesures',
-          'Pas de caisse, de devis, de stock ni de rapports',
+          'Pas de caisse, de devis, de stock ni de SMS clients',
           'Idéal pour tester CouturiX avant de passer à une offre payante'
         ]
       },
@@ -247,7 +247,7 @@ export const HOME_PLANS: HomePlan[] = [
     kicker: 'Présence',
     limit: '1 atelier',
     description: 'Pour tenir le carnet de commandes et la relation client.',
-    features: ['Vitrine complète', 'Commandes, clients et mesures', 'Catalogue de modèles', 'Statistiques de base'],
+    features: ['Vitrine complète', 'Commandes, clients et mesures', 'SMS clients (SMS Gateway)', 'Statistiques de base'],
     services: [
       {
         title: 'Vitrine',
@@ -267,7 +267,8 @@ export const HOME_PLANS: HomePlan[] = [
           'Fiches clients, historique et coordonnées',
           'Mensurations enregistrées et réutilisées à chaque tenue',
           'Notes d’essayage et de retouche liées à la commande',
-          'Notifications lorsque l’avancement change'
+          'SMS au client dès qu’une commande avance (SMS Gateway)',
+          'Rappels SMS depuis l’espace Notifications'
         ]
       },
       {
@@ -302,12 +303,12 @@ export const HOME_PLANS: HomePlan[] = [
     limit: 'Jusqu’à 5 ateliers',
     description: 'Pour une maison qui encaisse, stocke et fait travailler une équipe.',
     popular: true,
-    features: ['Jusqu’à 5 ateliers et 5 utilisateurs', 'Caisse, dépenses et stocks', 'Publications prioritaires', 'Statistiques détaillées'],
+    features: ['Jusqu’à 5 ateliers et 5 utilisateurs', 'Caisse, dépenses et stocks', 'SMS clients inclus', 'Statistiques détaillées'],
     services: [
       {
         title: 'Tout Standard, et l’équipe',
         items: [
-          'Vitrine, commandes, clients, mesures, devis et catalogue',
+          'Vitrine, commandes, clients, mesures, devis, catalogue et SMS',
           'Jusqu’à 5 ateliers sous le même compte',
           'Jusqu’à 5 utilisateurs : gérant, tailleur, caissier, réception',
           'Chaque collaborateur ne voit que son périmètre',
@@ -358,12 +359,12 @@ export const HOME_PLANS: HomePlan[] = [
     kicker: 'Maison',
     limit: 'Ateliers illimités',
     description: 'Pour un réseau de maisons, avec mise en avant et accompagnement.',
-    features: ['Ateliers et utilisateurs illimités', 'Mise en avant sur CouturiX', 'Statistiques avancées', 'Accompagnement personnalisé'],
+    features: ['Ateliers et utilisateurs illimités', 'Mise en avant sur CouturiX', 'SMS clients inclus', 'Accompagnement personnalisé'],
     services: [
       {
         title: 'Réseau de maisons',
         items: [
-          'Toutes les fonctions Premium : caisse, stocks, production, équipe',
+          'Toutes les fonctions Premium : caisse, stocks, production, équipe et SMS',
           'Ateliers illimités, y compris annexes et comptoirs',
           'Utilisateurs illimités et rôles séparés',
           'Un pilotage commun, avec le détail de chaque maison',

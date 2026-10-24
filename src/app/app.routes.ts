@@ -52,11 +52,75 @@ export const routes: Routes = [
       import('./features/catalogue/catalogue-detail.component').then((m) => m.CatalogueDetailComponent)
   },
   {
+    path: 'a-propos',
+    loadComponent: () => import('./public/site-page.component').then((m) => m.SitePageComponent),
+    data: { page: 'about' }
+  },
+  {
+    path: 'contact',
+    loadComponent: () => import('./public/site-page.component').then((m) => m.SitePageComponent),
+    data: { page: 'contact' }
+  },
+  {
+    path: 'partenaires',
+    loadComponent: () => import('./public/site-page.component').then((m) => m.SitePageComponent),
+    data: { page: 'partners' }
+  },
+  {
+    path: 'conditions-utilisation',
+    loadComponent: () => import('./public/site-page.component').then((m) => m.SitePageComponent),
+    data: { page: 'terms' }
+  },
+  {
+    path: 'politique-confidentialite',
+    loadComponent: () => import('./public/site-page.component').then((m) => m.SitePageComponent),
+    data: { page: 'privacy' }
+  },
+  {
+    path: 'p/:slug',
+    loadComponent: () => import('./public/site-page.component').then((m) => m.SitePageComponent)
+  },
+  {
     path: 'app',
     component: ShellComponent,
     canActivate: [authGuard, staffGuard],
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      {
+        path: 'plateforme',
+        canActivate: [roleGuard],
+        data: { roles: ['SUPER_ADMIN'] },
+        loadComponent: () =>
+          import('./features/plateforme/plateforme.component').then((m) => m.PlateformeComponent)
+      },
+      {
+        path: 'comptes-clients',
+        canActivate: [roleGuard],
+        data: { roles: ['SUPER_ADMIN'] },
+        loadComponent: () =>
+          import('./features/plateforme/comptes-clients.component').then((m) => m.ComptesClientsComponent)
+      },
+      {
+        path: 'site/pages',
+        canActivate: [roleGuard],
+        data: { roles: ['SUPER_ADMIN'] },
+        loadComponent: () =>
+          import('./features/plateforme/cms-pages.component').then((m) => m.CmsPagesComponent)
+      },
+      {
+        path: 'site/menus',
+        canActivate: [roleGuard],
+        data: { roles: ['SUPER_ADMIN'] },
+        loadComponent: () =>
+          import('./features/plateforme/cms-menus.component').then((m) => m.CmsMenusComponent)
+      },
+      {
+        path: 'site/apparence',
+        canActivate: [roleGuard],
+        data: { roles: ['SUPER_ADMIN'] },
+        loadComponent: () =>
+          import('./features/plateforme/cms-apparence.component').then((m) => m.CmsApparenceComponent)
+      },
       {
         path: 'dashboard',
         loadComponent: () => import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent)

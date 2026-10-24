@@ -1,0 +1,98 @@
+<app-public-nav />
+<main class="site">
+  <header class="hero">
+    <div class="wrap">
+      @if (page.eyebrow) {
+        <p class="eyebrow">{{ page.eyebrow }}</p>
+      }
+      <h1>{{ page.title }}</h1>
+      @if (page.lead) {
+        <p class="lead">{{ page.lead }}</p>
+      }
+    </div>
+  </header>
+
+  <div class="wrap body">
+    @if (key === 'contact') {
+      <section class="story">
+        <form class="card form" [formGroup]="form" (ngSubmit)="send()">
+          <h2>Envoyer un message</h2>
+          <mat-form-field appearance="outline">
+            <mat-label>Nom</mat-label>
+            <input matInput formControlName="nom" autocomplete="name">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>E-mail</mat-label>
+            <input matInput type="email" formControlName="email" autocomplete="email">
+          </mat-form-field>
+          <app-phone-field formControlName="telephone" label="Téléphone" />
+          <mat-form-field appearance="outline">
+            <mat-label>Sujet</mat-label>
+            <mat-select formControlName="sujet">
+              @for (item of subjects; track item.id) {
+                <mat-option [value]="item.id">{{ item.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Message</mat-label>
+            <textarea matInput rows="5" formControlName="message"></textarea>
+          </mat-form-field>
+          <button mat-flat-button color="primary" type="submit" [disabled]="sending">
+            <mat-icon>send</mat-icon>
+            Envoyer
+          </button>
+        </form>
+        <aside class="card">
+          <h3>Olive Services</h3>
+          <p>{{ address }}</p>
+          <p><a [href]="'mailto:' + mail">{{ mail }}</a></p>
+          @for (phone of phones; track phone) {
+            <p>{{ phone }}</p>
+          }
+          <p class="muted">Les messages sont traités par l’éditeur de CouturiX, du lundi au vendredi.</p>
+        </aside>
+      </section>
+    }
+
+    @if (cms?.body) {
+      <div class="cms-html" [innerHTML]="cms!.body"></div>
+    } @else if (key === 'about') {
+      <section class="story">
+        <article>
+          <h2>Olive Services, éditeur de CouturiX</h2>
+          <p>
+            Olive Services est une entreprise malienne de prestations de services et de commerce général,
+            active depuis 2020 au Mali et en Afrique. Elle conçoit des solutions numériques pour les
+            organisations, les commerces et les maisons de métier.
+          </p>
+          <p>
+            <strong>CouturiX</strong> est l’une de ces solutions : une plateforme SaaS pour publier un atelier
+            de couture, gérer les clients, les commandes, les mesures, la caisse et l’équipe, avec des tarifs
+            affichés uniquement en FCFA.
+          </p>
+          <p>
+            Le site d’Olive Services présente l’ensemble des métiers du groupe :
+            <a [href]="oliveUrl" target="_blank" rel="noopener">olive-services.net</a>.
+          </p>
+        </article>
+        <aside class="card">
+          <h3>Coordonnées</h3>
+          <p>{{ address }}</p>
+          <p><a [href]="'mailto:' + mail">{{ mail }}</a></p>
+          @for (phone of phones; track phone) {
+            <p>{{ phone }}</p>
+          }
+          <a class="btn" [href]="oliveUrl" target="_blank" rel="noopener">Visiter Olive Services</a>
+        </aside>
+      </section>
+    } @else if (!key && !cms) {
+      <section>
+        <h2>Page introuvable</h2>
+        <p>Cette page n’est pas publiée ou n’existe pas encore.</p>
+        <a class="btn" routerLink="/">Retour à l’accueil</a>
+      </section>
+    }
+  </div>
+</main>
+<app-public-footer />

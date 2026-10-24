@@ -2,6 +2,7 @@ import { Component, HostListener, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../core/auth.service';
+import { SiteContentService } from '../core/site-content.service';
 import { RegisterClientDialogService } from './register-client.component';
 
 @Component({
@@ -15,6 +16,7 @@ export class PublicNavComponent {
   readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly clients = inject(RegisterClientDialogService);
+  private readonly site = inject(SiteContentService);
 
   menuOpen = false;
   scrolled = false;
@@ -22,6 +24,22 @@ export class PublicNavComponent {
   @HostListener('window:scroll')
   onScroll(): void {
     this.scrolled = window.scrollY > 8;
+  }
+
+  headerMenus() {
+    return this.site.menus('HEADER');
+  }
+
+  parts(path: string) {
+    return this.site.parts(path);
+  }
+
+  ctaLabel(): string {
+    return this.site.settings().headerCtaLabel || 'Créer mon atelier';
+  }
+
+  cta() {
+    return this.site.parts(this.site.settings().headerCtaPath || '/inscription');
   }
 
   openClient(): void {

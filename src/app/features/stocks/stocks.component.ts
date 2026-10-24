@@ -1,5 +1,5 @@
 import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, ElementRef, inject, viewChild } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -15,6 +15,36 @@ import { requireValid } from '../../core/forms';
 import { ArticleStock, InventaireResultat, MouvementStock, PageResponse } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
 import { money } from '../../core/format';
+import { BarcodeScanDialogComponent } from '../../shared/barcode-scan-dialog.component';
+
+const UNITES_DEFAUT: { value: string; label: string }[] = [
+  { value: 'METRE', label: 'Mètre' },
+  { value: 'UNITE', label: 'Unité' },
+  { value: 'BOBINE', label: 'Bobine' },
+  { value: 'KG', label: 'Kg' },
+  { value: 'PAQUET', label: 'Paquet' },
+  { value: 'YARD', label: 'Yard' },
+  { value: 'ROULEAU', label: 'Rouleau' },
+  { value: 'PIECE', label: 'Pièce' },
+  { value: 'COUPON', label: 'Coupon' }
+];
+
+function uniteLabel(value?: string | null): string {
+  const raw = (value ?? '').trim();
+  if (!raw) {
+    return 'Unité';
+  }
+  const key = raw.toLocaleLowerCase('fr');
+  const known = UNITES_DEFAUT.find(
+    (item) => item.value.toLocaleLowerCase('fr') === key || item.label.toLocaleLowerCase('fr') === key
+  );
+  return known?.label ?? raw;
+}
+
+interface ArticleFormData {
+  article: ArticleStock | null;
+  unites: string[];
+}
 
 const TYPE_MOUVEMENT: Record<string, string> = {
   ENTREE: 'Entrée',
@@ -36,35 +66,50 @@ interface InventaireLigne {
 @Component({
   selector: 'app-article-form-dialog',
   standalone: true,
-  imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule, MatIconModule],
+  imports: [FormsModule, ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule, MatIconModule],
   template: `
     <h2 mat-dialog-title class="dialog-title">
       <span class="dialog-icon"><mat-icon>inventory_2</mat-icon></span>
-      {{ data ? "Modifier l'article" : "Nouvel article" }}
+      {{ data.article ? "Modifier l'article" : "Nouvel article" }}
     </h2>
     <form [formGroup]="form" (ngSubmit)="save()">
       <mat-dialog-content class="dialog-form">
         <div class="form-grid">
           <div class="form-section"><mat-icon>inventory</mat-icon><span>Article</span></div>
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="outline" class="full">
             <mat-label>Nom</mat-label>
             <mat-icon matPrefix>label</mat-icon>
             <input matInput formControlName="nom">
           </mat-form-field>
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="outline" class="full">
             <mat-label>SKU</mat-label>
             <mat-icon matPrefix>qr_code_2</mat-icon>
-            <input matInput formControlName="sku">
+            <input matInput formControlName="sku" autocomplete="off" (keydown.enter)="$event.preventDefault()">
+            <button mat-icon-button matSuffix type="button" (click)="scanSku()" aria-label="Scanner le code-barres">
+              <mat-icon>qr_code_scanner</mat-icon>
+            </button>
           </mat-form-field>
           <mat-form-field appearance="outline">
             <mat-label>Unité</mat-label>
             <mat-icon matPrefix>straighten</mat-icon>
-            <mat-select formControlName="unite">
-              <mat-option value="METRE">Mètre</mat-option>
-              <mat-option value="UNITE">Unité</mat-option>
-              <mat-option value="BOBINE">Bobine</mat-option>
-              <mat-option value="KG">Kg</mat-option>
-              <mat-option value="PAQUET">Paquet</mat-option>
+            <mat-select formControlName="unite" panelClass="spec-panel" (openedChange)="onUnitePanel($event)">
+              <div class="spec-search" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+                <mat-icon>search</mat-icon>
+                <input #uniteSearch type="text" [(ngModel)]="uniteQuery" [ngModelOptions]="{standalone: true}"
+                       placeholder="Rechercher ou créer" autocomplete="off">
+              </div>
+              @if (canCreateUnite()) {
+                <button type="button" class="spec-create" (mousedown)="$event.preventDefault()" (click)="createUnite()">
+                  <mat-icon>add</mat-icon>
+                  Créer « {{ uniteName() }} »
+                </button>
+              }
+              @for (u of filteredUnites(); track u.value) {
+                <mat-option [value]="u.value">{{ u.label }}</mat-option>
+              }
+              @if (!filteredUnites().length && !canCreateUnite()) {
+                <div class="spec-empty">Aucune unité</div>
+              }
             </mat-select>
           </mat-form-field>
           <mat-form-field appearance="outline">
@@ -93,26 +138,105 @@ interface InventaireLigne {
   `
 })
 export class ArticleFormDialogComponent {
-  readonly data = inject<ArticleStock | null>(MAT_DIALOG_DATA);
+  readonly data = inject<ArticleFormData>(MAT_DIALOG_DATA);
   private readonly dialogRef = inject(MatDialogRef<ArticleFormDialogComponent>);
+  private readonly dialog = inject(MatDialog);
   private readonly api = inject(ApiService);
   private readonly notify = inject(NotifyService);
   private readonly fb = inject(FormBuilder);
+  unites = [...UNITES_DEFAUT];
+  uniteQuery = '';
+  private readonly uniteSearch = viewChild<ElementRef<HTMLInputElement>>('uniteSearch');
   readonly form = this.fb.group({
-    nom: [this.data?.nom ?? '', Validators.required],
-    sku: [this.data?.sku ?? '', Validators.required],
-    unite: [this.data?.unite ?? 'UNITE'],
-    stockMinimum: [this.data?.stockMinimum ?? 0],
-    prixAchat: [this.data?.prixAchat ?? 0],
-    prixVente: [this.data?.prixVente ?? null]
+    nom: [this.data.article?.nom ?? '', Validators.required],
+    sku: [this.data.article?.sku ?? '', Validators.required],
+    unite: [this.data.article?.unite ?? 'UNITE', Validators.required],
+    stockMinimum: [this.data.article?.stockMinimum ?? 0],
+    prixAchat: [this.data.article?.prixAchat ?? 0],
+    prixVente: [this.data.article?.prixVente ?? null]
   });
+
+  constructor() {
+    for (const value of this.data.unites ?? []) {
+      this.ensureUnite(value);
+    }
+    this.ensureUnite(this.data.article?.unite);
+  }
+
+  uniteName(): string {
+    return this.uniteQuery.trim().replace(/\s+/g, ' ');
+  }
+
+  filteredUnites(): { value: string; label: string }[] {
+    const q = this.uniteName().toLocaleLowerCase('fr');
+    if (!q) {
+      return this.unites;
+    }
+    return this.unites.filter((item) =>
+      item.label.toLocaleLowerCase('fr').includes(q) || item.value.toLocaleLowerCase('fr').includes(q)
+    );
+  }
+
+  canCreateUnite(): boolean {
+    const name = this.uniteName();
+    if (name.length < 1 || name.length > 30) {
+      return false;
+    }
+    const key = name.toLocaleLowerCase('fr');
+    return !this.unites.some(
+      (item) => item.label.toLocaleLowerCase('fr') === key || item.value.toLocaleLowerCase('fr') === key
+    );
+  }
+
+  onUnitePanel(open: boolean): void {
+    if (!open) {
+      return;
+    }
+    this.uniteQuery = '';
+    queueMicrotask(() => this.uniteSearch()?.nativeElement.focus());
+  }
+
+  createUnite(): void {
+    const name = this.uniteName();
+    if (!this.canCreateUnite()) {
+      return;
+    }
+    this.ensureUnite(name);
+    this.form.controls.unite.setValue(name);
+    this.uniteQuery = '';
+    this.notify.success(`Unité « ${name} » ajoutée`);
+  }
+
+  private ensureUnite(raw?: string | null): void {
+    const value = (raw ?? '').trim();
+    if (!value) {
+      return;
+    }
+    const key = value.toLocaleLowerCase('fr');
+    if (this.unites.some((item) => item.value.toLocaleLowerCase('fr') === key || item.label.toLocaleLowerCase('fr') === key)) {
+      return;
+    }
+    this.unites = [...this.unites, { value, label: value }];
+  }
+
+  scanSku(): void {
+    this.dialog.open(BarcodeScanDialogComponent, { width: '420px', autoFocus: false }).afterClosed().subscribe((code) => {
+      if (typeof code === 'string' && code.trim()) {
+        this.form.controls.sku.setValue(code.trim());
+        this.form.controls.sku.markAsDirty();
+        this.notify.success('Code-barres lu');
+      }
+    });
+  }
 
   save(): void {
     if (!requireValid(this.form, this.notify)) {
       return;
     }
     const body = this.form.getRawValue();
-    const req = this.data?.id ? this.api.put(`articles-stock/${this.data.id}`, body) : this.api.post('articles-stock', body);
+    const req = this.data.article?.id
+      ? this.api.put(`articles-stock/${this.data.article.id}`, body)
+      : this.api.post('articles-stock', body);
     req.subscribe({
       next: () => {
         this.notify.success('Article enregistré');
@@ -261,7 +385,7 @@ export class MouvementFormDialogComponent {
               <ng-container matColumnDef="sku"><th mat-header-cell *matHeaderCellDef>SKU</th><td mat-cell *matCellDef="let r">{{ r.sku }}</td></ng-container>
               <ng-container matColumnDef="stock"><th mat-header-cell *matHeaderCellDef>Stock</th>
                 <td mat-cell *matCellDef="let r">
-                  {{ r.stockActuel | number:'1.0-2' }} {{ r.unite }}
+                  {{ r.stockActuel | number:'1.0-2' }} {{ uniteLibelle(r.unite) }}
                   @if (r.stockActuel <= r.stockMinimum) { <span class="badge badge-danger">Alerte</span> }
                 </td>
               </ng-container>
@@ -304,7 +428,7 @@ export class MouvementFormDialogComponent {
               <ng-container matColumnDef="nom"><th mat-header-cell *matHeaderCellDef>Article</th><td mat-cell *matCellDef="let r">{{ r.nom }}</td></ng-container>
               <ng-container matColumnDef="sku"><th mat-header-cell *matHeaderCellDef>SKU</th><td mat-cell *matCellDef="let r">{{ r.sku }}</td></ng-container>
               <ng-container matColumnDef="theorique"><th mat-header-cell *matHeaderCellDef>Théorique</th>
-                <td mat-cell *matCellDef="let r">{{ r.stockTheorique | number:'1.0-2' }} {{ r.unite }}</td>
+                <td mat-cell *matCellDef="let r">{{ r.stockTheorique | number:'1.0-2' }} {{ uniteLibelle(r.unite) }}</td>
               </ng-container>
               <ng-container matColumnDef="reelle"><th mat-header-cell *matHeaderCellDef>Quantité réelle</th>
                 <td mat-cell *matCellDef="let r">
@@ -395,6 +519,10 @@ export class StocksComponent {
     return Number((Number(ligne.quantiteReelle) - Number(ligne.stockTheorique)).toFixed(3));
   }
 
+  uniteLibelle(value?: string | null): string {
+    return uniteLabel(value);
+  }
+
   typeLabel(row: MouvementStock): string {
     const key = row.type || row.typeMouvement || '';
     return TYPE_MOUVEMENT[key] || key;
@@ -440,7 +568,13 @@ export class StocksComponent {
   }
 
   edit(row?: ArticleStock): void {
-    this.dialog.open(ArticleFormDialogComponent, { width: '720px', data: row ?? null }).afterClosed().subscribe((ok) => ok && this.load());
+    const unites = [...this.rows, ...this.allArticles]
+      .map((article) => article.unite)
+      .filter((value): value is string => !!value);
+    this.dialog.open(ArticleFormDialogComponent, {
+      width: '760px',
+      data: { article: row ?? null, unites }
+    }).afterClosed().subscribe((ok) => ok && this.load());
   }
 
   mouvement(): void {

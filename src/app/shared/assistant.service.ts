@@ -56,9 +56,16 @@ export class AssistantService {
         ['Chercher un atelier', 'Voir le catalogue']
       ));
     }
+    if (/sms|passerelle/.test(text)) {
+      return of(this.page(
+        'Les SMS clients passent par SMS Gateway dès l’offre Standard (15 000 FCFA / mois). L’offre Gratuite reste sur l’e-mail.',
+        { kind: 'page', title: 'Choisir Standard', detail: 'SMS inclus, 1 atelier', path: '/inscription', query: { plan: 'STANDARD' } },
+        ['Voir les tarifs', 'Choisir Premium']
+      ));
+    }
     if (/tarif|abonnement/.test(text) && !/robe|bazin|bogolan|soiree|mariage|retouche/.test(text)) {
       return of({
-        text: 'Gratuit et Standard : 1 atelier. Premium : jusqu’à 5 ateliers, 35 000 FCFA / mois. Gold : ateliers illimités, 60 000 FCFA / mois. L’annuel est à −20 %.',
+        text: 'Gratuit et Standard : 1 atelier. Les SMS clients (SMS Gateway) commencent à Standard. Premium : jusqu’à 5 ateliers, 35 000 FCFA / mois. Gold : ateliers illimités, 60 000 FCFA / mois. L’annuel est à −20 %.',
         hits: [
           { kind: 'page', title: 'Voir les tarifs', detail: 'Tous les prix sont en FCFA', path: '/' },
           { kind: 'page', title: 'Choisir Premium', detail: 'Jusqu’à 5 ateliers', path: '/inscription', query: { plan: 'PREMIUM' } }
@@ -85,11 +92,37 @@ export class AssistantService {
         suggestions: ['Je suis un client', 'Chercher un atelier à Bamako', 'Voir les modèles']
       });
     }
-    if (/contact|partenair|publicit/.test(text)) {
+    if (/a propos|olive/.test(text)) {
       return of(this.page(
-        'Pour un partenariat ou une publicité, la section Contact de l’accueil rassemble les demandes.',
-        { kind: 'page', title: 'Contact', detail: 'Écrire à CouturiX', path: '/' },
-        ['Voir les tarifs', 'Créer mon atelier']
+        'CouturiX est édité par Olive Services, à Kati au Mali. La page À propos présente l’éditeur et la plateforme.',
+        { kind: 'page', title: 'À propos', detail: 'Olive Services, éditeur de CouturiX', path: '/a-propos' },
+        ['Contact', 'Voir les tarifs']
+      ));
+    }
+    if (/condition|utilisation|legal|mentions/.test(text)) {
+      return of(this.page(
+        'Les conditions d’utilisation encadrent les comptes atelier, les offres en FCFA et les contenus publiés.',
+        { kind: 'page', title: 'Conditions d’utilisation', detail: 'Règles d’usage de CouturiX', path: '/conditions-utilisation' },
+        ['Politique de confidentialité', 'Contact']
+      ));
+    }
+    if (/confidential|donnees perso|rgpd|vie privee/.test(text)) {
+      return of(this.page(
+        'La politique de confidentialité explique quelles données sont collectées et comment les exercer.',
+        { kind: 'page', title: 'Politique de confidentialité', detail: 'Données personnelles CouturiX', path: '/politique-confidentialite' },
+        ['Conditions d’utilisation', 'Contact']
+      ));
+    }
+    if (/contact|partenair|publicit/.test(text)) {
+      const partner = /partenair|publicit/.test(text);
+      return of(this.page(
+        partner
+          ? 'Les partenariats et espaces publicitaires se demandent depuis la page dédiée, ou par message à Olive Services.'
+          : 'Vous pouvez écrire à Olive Services depuis la page Contact : e-mail, téléphone et formulaire.',
+        partner
+          ? { kind: 'page', title: 'Partenaires', detail: 'Publicité et alliances', path: '/partenaires' }
+          : { kind: 'page', title: 'Contact', detail: 'Écrire à Olive Services', path: '/contact' },
+        ['À propos', 'Créer mon atelier']
       ));
     }
     if (!searching && /^(bonjour|salut|hello|aide|help)\b|que peux|que sait|comment ca marche/.test(text) && tokens.length === 0) {

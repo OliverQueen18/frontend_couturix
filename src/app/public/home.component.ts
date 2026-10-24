@@ -15,6 +15,7 @@ import {
   HOME_WORKSHOPS,
   HomeWorkshop
 } from './home.data';
+import { PublicFooterComponent } from './public-footer.component';
 import { PublicNavComponent } from './public-nav.component';
 import { PlanDetailDialogService } from './plan-detail-dialog.component';
 import { StarsComponent } from './stars.component';
@@ -22,7 +23,7 @@ import { StarsComponent } from './stars.component';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [FormsModule, RouterLink, MatIconModule, PublicNavComponent, StarsComponent],
+  imports: [FormsModule, RouterLink, MatIconModule, PublicNavComponent, PublicFooterComponent, StarsComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home-landing.scss', './home-market.scss', './home-offer.scss']
 })

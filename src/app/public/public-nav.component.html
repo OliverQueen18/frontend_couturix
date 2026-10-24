@@ -7,11 +7,15 @@
   </button>
   <div class="bar-links" [class.open]="menuOpen">
     <nav>
-      <a routerLink="/" routerLinkActive="is-on" [routerLinkActiveOptions]="{ exact: true }" (click)="menuOpen = false">Accueil</a>
-      <a routerLink="/ateliers" routerLinkActive="is-on" (click)="menuOpen = false">Ateliers</a>
-      <a routerLink="/catalogue" routerLinkActive="is-on" (click)="menuOpen = false">Catalogue</a>
-      <a routerLink="/" fragment="tarifs" (click)="menuOpen = false">Tarifs</a>
-      <a routerLink="/" fragment="a-propos" (click)="menuOpen = false">À propos</a>
+      @for (item of headerMenus(); track item.id) {
+        @if (parts(item.path).href) {
+          <a [href]="parts(item.path).href" target="_blank" rel="noopener" (click)="menuOpen = false">{{ item.label }}</a>
+        } @else {
+          <a [routerLink]="parts(item.path).link" [fragment]="parts(item.path).fragment"
+             routerLinkActive="is-on" [routerLinkActiveOptions]="{ exact: parts(item.path).link === '/' }"
+             (click)="menuOpen = false">{{ item.label }}</a>
+        }
+      }
     </nav>
     <div class="bar-actions">
       <button type="button" class="icon-btn" (click)="focusSearch()" aria-label="Rechercher">
@@ -22,7 +26,11 @@
       } @else {
         <button type="button" class="text-btn" (click)="openClient()">Compte client</button>
         <a routerLink="/login" class="btn btn-line" routerLinkActive="is-on" (click)="menuOpen = false">Connexion</a>
-        <a routerLink="/inscription" class="btn btn-pink" routerLinkActive="is-on" (click)="menuOpen = false">Créer mon atelier</a>
+        @if (cta().href) {
+          <a class="btn btn-pink" [href]="cta().href" target="_blank" rel="noopener" (click)="menuOpen = false">{{ ctaLabel() }}</a>
+        } @else {
+          <a class="btn btn-pink" [routerLink]="cta().link" [fragment]="cta().fragment" routerLinkActive="is-on" (click)="menuOpen = false">{{ ctaLabel() }}</a>
+        }
       }
     </div>
   </div>

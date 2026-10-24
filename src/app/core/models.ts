@@ -261,6 +261,14 @@ export interface CaisseOperation {
   createdAt?: string;
 }
 
+export interface TicketSignataire {
+  id: number;
+  libelle: string;
+  nom?: string | null;
+  ordre: number;
+  actif: boolean;
+}
+
 export interface ClotureCaisse {
   soldeReel: number;
   commentaires?: string;
@@ -402,6 +410,70 @@ export interface NotificationItem {
   erreur?: string | null;
   createdAt?: string;
   sentAt?: string | null;
+}
+
+export type SiteMenuLocation = 'HEADER' | 'FOOTER_PLATEFORME' | 'FOOTER_ENTREPRISE' | 'FOOTER_LEGAL';
+
+export interface SiteSettings {
+  brandName: string;
+  tagline?: string | null;
+  footerTagline?: string | null;
+  footerNote?: string | null;
+  headerCtaLabel?: string | null;
+  headerCtaPath?: string | null;
+  contactEmail?: string | null;
+  contactPhones?: string | null;
+  contactAddress?: string | null;
+  facebookUrl?: string | null;
+  instagramUrl?: string | null;
+  tiktokUrl?: string | null;
+  linkedinUrl?: string | null;
+  youtubeUrl?: string | null;
+}
+
+export interface SiteMenu {
+  id: number;
+  location: SiteMenuLocation;
+  label: string;
+  path: string;
+  sortOrder: number;
+  visible: boolean;
+}
+
+export interface SitePage {
+  id: number;
+  slug: string;
+  title: string;
+  eyebrow?: string | null;
+  lead?: string | null;
+  body: string;
+  published: boolean;
+  updatedAt?: string | null;
+}
+
+export interface SiteSnapshot {
+  settings: SiteSettings;
+  menus: SiteMenu[];
+  pages: SitePage[];
+}
+
+export interface PlatformOverview {
+  ateliers: number;
+  utilisateurs: number;
+  comptesClients: number;
+  pages: number;
+  menus: number;
+}
+
+export interface AbonnementCourant {
+  plan: string;
+  libelle: string;
+  ateliersUtilises: number;
+  ateliersMax: number | null;
+  illimite: boolean;
+  peutCreer: boolean;
+  sms: boolean;
+  smsGatewayReady: boolean;
 }
 
 export interface NotificationTemplate {

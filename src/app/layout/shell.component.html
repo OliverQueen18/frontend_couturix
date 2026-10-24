@@ -7,7 +7,7 @@
     (openedChange)="onOpenedChange($event)">
     <div class="brand">
       <img src="logo-couturix.png" alt="CouturiX">
-      <p>Maison de couture</p>
+      <p>{{ auth.isSuperAdmin() ? 'Administration du site' : 'Maison de couture' }}</p>
     </div>
     <mat-nav-list>
       @for (group of visibleGroups(); track group.label) {
@@ -31,7 +31,7 @@
       <span class="page-icon title-badge"><mat-icon>{{ titleIcon }}</mat-icon></span>
       <span class="page-title">{{ title }}</span>
       <span class="spacer"></span>
-      @if (auth.user?.atelierNom) {
+      @if (auth.user?.atelierNom && !auth.isSuperAdmin()) {
         <span class="atelier-chip">
           <mat-icon>storefront</mat-icon>
           <span>{{ auth.user?.atelierNom }}</span>

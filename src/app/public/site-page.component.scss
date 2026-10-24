@@ -1,0 +1,113 @@
+:host { display: block; background: #faf8fc; color: #25142f; }
+
+.wrap { width: min(1100px, calc(100% - 2.5rem)); margin-inline: auto; }
+
+.hero {
+  padding: 4.5rem 0 2.4rem;
+  color: #fff;
+  background: linear-gradient(135deg, #260838 0%, #45105e 45%, #81175f 100%);
+}
+
+.eyebrow {
+  margin: 0 0 .6rem;
+  color: #ffb3cf;
+  font-size: .74rem;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0 0 .7rem;
+  color: #fff;
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  line-height: 1.05;
+}
+
+.lead { margin: 0; max-width: 42rem; color: rgba(255,255,255,.86); line-height: 1.55; }
+
+.body { padding: 2.4rem 0 4rem; display: grid; gap: 2rem; }
+.body h2, :host ::ng-deep .cms-html h2 { margin: 0 0 .7rem; }
+.body h3, :host ::ng-deep .cms-html h3 { margin: 0 0 .4rem; }
+.body p, .body li, :host ::ng-deep .cms-html p, :host ::ng-deep .cms-html li { line-height: 1.65; color: #4a4254; }
+.body a, :host ::ng-deep .cms-html a { color: #e21b70; }
+:host ::ng-deep .cms-html { display: grid; gap: 2rem; }
+:host ::ng-deep .cms-html .story { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(240px, .8fr); gap: 1.4rem; align-items: start; }
+:host ::ng-deep .cms-html .chips, :host ::ng-deep .cms-html .cards { display: grid; gap: .8rem; padding: 0; list-style: none; }
+:host ::ng-deep .cms-html .chips { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+:host ::ng-deep .cms-html .chips li, :host ::ng-deep .cms-html .cards article {
+  margin: 0; padding: .85rem 1rem; border-radius: 16px; background: #fff;
+  box-shadow: 0 10px 28px rgba(36, 10, 58, .06);
+}
+:host ::ng-deep .cms-html .cards { grid-template-columns: repeat(3, 1fr); }
+:host ::ng-deep .cms-html .cta {
+  display: flex; justify-content: space-between; gap: 1.2rem; align-items: center;
+  padding: 1.4rem 1.5rem; border-radius: 20px; color: #fff;
+  background: linear-gradient(135deg, #2e1052, #e21b70);
+}
+:host ::ng-deep .cms-html .cta h2, :host ::ng-deep .cms-html .cta p { color: #fff; }
+:host ::ng-deep .cms-html .btn {
+  display: inline-flex; align-items: center; gap: .4rem; padding: .7rem 1.1rem;
+  border-radius: 999px; background: #e21b70; color: #fff !important; text-decoration: none; font-weight: 700;
+}
+:host ::ng-deep .cms-html .cta .btn { background: #fff; color: #2e1052 !important; }
+@media (max-width: 860px) {
+  :host ::ng-deep .cms-html .story,
+  :host ::ng-deep .cms-html .cards,
+  :host ::ng-deep .cms-html .cta { grid-template-columns: 1fr; flex-direction: column; align-items: flex-start; }
+}
+
+.story { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(240px, .8fr); gap: 1.4rem; align-items: start; }
+
+.card {
+  padding: 1.3rem 1.4rem;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 16px 40px rgba(36, 10, 58, .08);
+}
+
+.card.form { display: grid; gap: .2rem; }
+.card .btn, .cta .btn, button[mat-flat-button] { margin-top: .6rem; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .7rem 1.1rem;
+  border-radius: 999px;
+  background: #e21b70;
+  color: #fff !important;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.chips, .cards { display: grid; gap: .8rem; padding: 0; list-style: none; }
+.chips { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+.chips li, .cards article {
+  margin: 0;
+  padding: .85rem 1rem;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(36, 10, 58, .06);
+}
+.cards { grid-template-columns: repeat(3, 1fr); }
+
+.cta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.2rem;
+  align-items: center;
+  padding: 1.4rem 1.5rem;
+  border-radius: 20px;
+  color: #fff;
+  background: linear-gradient(135deg, #2e1052, #e21b70);
+}
+.cta h2, .cta p { color: #fff; }
+.cta .btn { background: #fff; color: #2e1052 !important; }
+
+.legal h2 { margin-top: 1.4rem; }
+.muted { color: #766c7d; font-size: .92rem; }
+
+@media (max-width: 860px) {
+  .story, .cards, .cta { grid-template-columns: 1fr; flex-direction: column; align-items: flex-start; }
+}

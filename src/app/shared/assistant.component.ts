@@ -252,9 +252,7 @@ export class AssistantComponent implements AfterViewChecked {
   }
 
   openHit(hit: AssistantHit): void {
-    const fragment = hit.path === '/' && hit.title.toLowerCase().includes('tarif') ? 'tarifs'
-      : hit.path === '/' && hit.title.toLowerCase().includes('contact') ? 'contact'
-        : undefined;
+    const fragment = hit.path === '/' && hit.title.toLowerCase().includes('tarif') ? 'tarifs' : undefined;
     void this.router.navigate([hit.path], { queryParams: hit.query, fragment });
     this.open = false;
   }

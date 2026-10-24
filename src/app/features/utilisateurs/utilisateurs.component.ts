@@ -153,7 +153,13 @@ export class UtilisateursComponent {
     : ['nom', 'email', 'roles', 'actif', 'actions'];
 
   planLabel(code?: string | null): string {
-    return ({ GRATUIT: 'Gratuit', STANDARD: 'Standard', PREMIUM: 'Premium', GOLD: 'Gold' } as Record<string, string>)[code ?? ''] ?? 'Gratuit';
+    return ({
+      GRATUIT: 'Gratuit',
+      STANDARD: 'Standard',
+      PREMIUM: 'Premium',
+      GOLD: 'Gold',
+      PLATEFORME: 'Plateforme'
+    } as Record<string, string>)[code ?? ''] ?? 'Gratuit';
   }
 
   constructor() {

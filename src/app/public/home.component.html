@@ -170,7 +170,7 @@
           <h2>Espaces publicitaires</h2>
           <p>Faites connaître votre marque auprès d’une communauté passionnée par la couture.</p>
         </div>
-        <a routerLink="/" fragment="contact">Devenir partenaire <mat-icon>arrow_forward</mat-icon></a>
+        <a routerLink="/partenaires">Devenir partenaire <mat-icon>arrow_forward</mat-icon></a>
       </div>
       <div class="ads">
         @if (banner) {
@@ -178,7 +178,7 @@
             <p class="kicker">Espace premium</p>
             <h3>{{ banner.title }}</h3>
             <p>{{ banner.description }}</p>
-            <a routerLink="/" fragment="contact" class="btn btn-pink">{{ banner.cta }}</a>
+            <a routerLink="/contact" [queryParams]="{ sujet: 'publicite' }" class="btn btn-pink">{{ banner.cta }}</a>
           </article>
         }
         <div class="ad-stack">
@@ -187,7 +187,7 @@
               @if (ad.sponsor) { <p class="sponsor">{{ ad.sponsor }}</p> }
               <h3>{{ ad.title }}</h3>
               <p>{{ ad.description }}</p>
-              <a routerLink="/" fragment="contact">{{ ad.cta }} <mat-icon>arrow_forward</mat-icon></a>
+              <a routerLink="/contact" [queryParams]="{ sujet: 'publicite' }">{{ ad.cta }} <mat-icon>arrow_forward</mat-icon></a>
             </article>
           }
         </div>
@@ -267,41 +267,5 @@
     </div>
   </section>
 
-  <footer class="foot">
-    <div class="wrap foot-grid">
-      <div>
-        <img src="logo-couturix.png" alt="CouturiX">
-        <p>La plateforme digitale des ateliers de couture.</p>
-      </div>
-      <div>
-        <p>Plateforme</p>
-        <a routerLink="/">Accueil</a>
-        <a routerLink="/ateliers">Ateliers</a>
-        <a routerLink="/catalogue">Catalogue</a>
-        <a routerLink="/" fragment="tarifs">Tarifs</a>
-      </div>
-      <div>
-        <p>Entreprise</p>
-        <a routerLink="/" fragment="a-propos">À propos</a>
-        <a routerLink="/" fragment="contact">Contact</a>
-        <a routerLink="/" fragment="partenaires">Partenaires</a>
-      </div>
-      <div>
-        <p>Légal</p>
-        <a routerLink="/" fragment="contact">Conditions d’utilisation</a>
-        <a routerLink="/" fragment="contact">Politique de confidentialité</a>
-      </div>
-    </div>
-    <div class="wrap foot-base">
-      <span>© CouturiX. Tous droits réservés.</span>
-      <span class="socials">
-        <a href="https://facebook.com" target="_blank" rel="noopener" aria-label="Facebook">Fb</a>
-        <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram">Ig</a>
-        <a href="https://www.tiktok.com" target="_blank" rel="noopener" aria-label="TikTok">Tk</a>
-        <a href="https://www.linkedin.com" target="_blank" rel="noopener" aria-label="LinkedIn">In</a>
-        <a href="https://youtube.com" target="_blank" rel="noopener" aria-label="YouTube">Yt</a>
-      </span>
-      <span>Simple · Élégant · Rentable</span>
-    </div>
-  </footer>
+  <app-public-footer />
 </div>

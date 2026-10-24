@@ -52,6 +52,26 @@ export class ShellComponent {
   readonly menuOpen = signal(false);
   readonly sidenavOpened = computed(() => !!this.desktop() || this.menuOpen());
 
+  readonly platformGroups: NavGroup[] = [
+    {
+      label: 'Plateforme',
+      items: [
+        { label: 'Vue d’ensemble', icon: 'admin_panel_settings', path: '/app/plateforme' },
+        { label: 'Ateliers', icon: 'storefront', path: '/app/ateliers' },
+        { label: 'Comptes clients', icon: 'person', path: '/app/comptes-clients' },
+        { label: 'Utilisateurs', icon: 'manage_accounts', path: '/app/utilisateurs' }
+      ]
+    },
+    {
+      label: 'Contenu du site',
+      items: [
+        { label: 'Pages', icon: 'article', path: '/app/site/pages' },
+        { label: 'Menus', icon: 'menu', path: '/app/site/menus' },
+        { label: 'En-tête et pied', icon: 'web', path: '/app/site/apparence' }
+      ]
+    }
+  ];
+
   readonly groups: NavGroup[] = [
     {
       label: 'Pilotage',
@@ -101,14 +121,19 @@ export class ShellComponent {
 
   constructor() {
     this.router.events.pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd)).subscribe((e) => {
-      const item = this.groups.flatMap((g) => g.items).find((nav) => e.urlAfterRedirects.startsWith(nav.path));
-      this.title = item?.label ?? 'CouturiX';
+      const item = this.visibleGroups()
+        .flatMap((g) => g.items)
+        .find((nav) => e.urlAfterRedirects.startsWith(nav.path));
+      this.title = item?.label ?? (this.auth.isSuperAdmin() ? 'Administration du site' : 'CouturiX');
       this.titleIcon = item?.icon ?? 'auto_awesome';
       this.closeMenu();
     });
   }
 
   visibleGroups(): NavGroup[] {
+    if (this.auth.isSuperAdmin()) {
+      return this.platformGroups;
+    }
     return this.groups
       .map((group) => ({
         ...group,

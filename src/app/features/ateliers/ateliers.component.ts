@@ -9,7 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { catchError, debounceTime, distinctUntilChanged, filter, of, switchMap } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { requireValid } from '../../core/forms';
-import { Atelier, GeoPoint } from '../../core/models';
+import { AbonnementCourant, Atelier, GeoPoint } from '../../core/models';
 import { AuthService } from '../../core/auth.service';
 import { NotifyService } from '../../core/notify.service';
 import { BAMAKO, DEFAULT_COUNTRY, countryOptions, mapZoomFor } from '../../shared/countries';
@@ -181,7 +181,7 @@ export class AteliersComponent {
   readonly api = inject(ApiService);
   private readonly notify = inject(NotifyService);
   readonly auth = inject(AuthService);
-  quota: { plan: string; libelle: string; ateliersUtilises: number; ateliersMax: number | null; illimite: boolean; peutCreer: boolean } | null = null;
+  quota: AbonnementCourant | null = null;
   private readonly fb = inject(FormBuilder);
   tree: Atelier[] = [];
   selected: Atelier | null = null;
@@ -255,7 +255,7 @@ export class AteliersComponent {
   }
 
   loadQuota(): void {
-    this.api.get<NonNullable<AteliersComponent['quota']>>('abonnements/courant').subscribe({
+    this.api.get<AbonnementCourant>('abonnements/courant').subscribe({
       next: (quota) => (this.quota = quota),
       error: () => (this.quota = null)
     });
