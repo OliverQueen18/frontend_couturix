@@ -83,10 +83,13 @@ void deployImage() {
 void pushHub() {
   withCredentials([usernamePassword(credentialsId: env.DOCKERHUB_CREDENTIALS_ID, usernameVariable: 'DH_USER', passwordVariable: 'DH_PASS')]) {
     sh '''
-      echo "$DH_PASS" | docker login -u "$DH_USER" --password-stdin
-      docker push "$FULL_IMAGE"
-      docker push "$HUB_IMAGE:latest"
-      docker logout
+      cfg="$(mktemp -d)"
+      trap 'rm -rf "$cfg"' EXIT
+      echo "$DH_PASS" | docker --config "$cfg" login -u "$DH_USER" --password-stdin
+      docker --config "$cfg" push "$FULL_IMAGE"
+      if ! docker --config "$cfg" push "$HUB_IMAGE:latest"; then
+        echo "Avertissement: tag latest refusé sur Docker Hub. Le VPS déploie $FULL_IMAGE."
+      fi
     '''
   }
 }
