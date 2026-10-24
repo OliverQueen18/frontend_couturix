@@ -59,7 +59,8 @@ export class ShellComponent {
         { label: 'Vue d’ensemble', icon: 'admin_panel_settings', path: '/app/plateforme' },
         { label: 'Ateliers', icon: 'storefront', path: '/app/ateliers' },
         { label: 'Comptes clients', icon: 'person', path: '/app/comptes-clients' },
-        { label: 'Utilisateurs', icon: 'manage_accounts', path: '/app/utilisateurs' }
+        { label: 'Utilisateurs', icon: 'manage_accounts', path: '/app/utilisateurs' },
+        { label: 'Offres', icon: 'workspace_premium', path: '/app/offres' }
       ]
     },
     {

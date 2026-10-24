@@ -23,6 +23,13 @@
     </div>
   </header>
 
+  @if (quota?.essai) {
+    <p class="card-block trial-banner">
+      Il vous reste {{ quota?.essaiJoursRestants }} jour(s) d’essai des fonctionnalités
+      (offre {{ quota?.libelle }}). Ensuite les limites de cette offre s’appliquent.
+    </p>
+  }
+
   @if (loading) {
     <mat-spinner diameter="36"></mat-spinner>
   }

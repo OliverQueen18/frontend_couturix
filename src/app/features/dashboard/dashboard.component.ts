@@ -12,7 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
-import { DashboardKpi } from '../../core/models';
+import { AbonnementCourant, DashboardKpi } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
 import { money, periodRange } from '../../core/format';
 
@@ -43,6 +43,7 @@ export class DashboardComponent {
   customTo = '';
   loading = false;
   data: DashboardKpi | null = null;
+  quota: AbonnementCourant | null = null;
   money = money;
 
   constructor() {
@@ -50,6 +51,10 @@ export class DashboardComponent {
       void this.router.navigateByUrl('/app/plateforme');
       return;
     }
+    this.api.get<AbonnementCourant>('abonnements/courant').subscribe({
+      next: (quota) => (this.quota = quota),
+      error: () => undefined
+    });
     this.load();
   }
 

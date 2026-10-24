@@ -191,10 +191,10 @@ export const HOME_PLANS: HomePlan[] = [
     name: 'Gratuit',
     priceMonthly: 0,
     tone: 'free',
-    kicker: 'Découverte',
+    kicker: '15 jours d’essai',
     limit: '1 atelier',
-    description: 'Pour ouvrir votre maison et être visible, sans frais.',
-    features: ['Fiche publique dans l’annuaire', '1 atelier et le compte gérant', 'Demandes de contact', 'Notifications par e-mail'],
+    description: 'Pour ouvrir votre maison et être visible, sans frais, avec 15 jours d’essai des fonctionnalités.',
+    features: ['15 jours d’essai des fonctionnalités', 'Fiche publique dans l’annuaire', '1 atelier et le compte gérant', 'Demandes de contact', 'Notifications par e-mail'],
     services: [
       {
         title: 'Présence en ligne',
@@ -211,6 +211,7 @@ export const HOME_PLANS: HomePlan[] = [
         title: 'Maison et compte',
         items: [
           'Un seul atelier rattaché au compte',
+          '15 jours d’essai des fonctionnalités (SMS clients compris)',
           'Compte gérant pour modifier la fiche à tout moment',
           'Sigle, RCCM et NIF enregistrés sur la maison',
           'Mot de passe et accès sécurisé à l’espace',
@@ -223,7 +224,7 @@ export const HOME_PLANS: HomePlan[] = [
           'Les visiteurs voient vos coordonnées et peuvent vous écrire',
           'Demandes de contact reçues depuis la fiche publique',
           'Pas de carnet de commandes ni de prises de mesures',
-          'Pas de caisse, de devis, de stock ni de SMS clients',
+          'SMS clients pendant la période d’essai, puis dès l’offre Standard',
           'Idéal pour tester CouturiX avant de passer à une offre payante'
         ]
       },

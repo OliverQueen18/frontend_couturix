@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { ApiService } from '../core/api.service';
-import { AtelierPublic } from '../core/models';
+import { AtelierPublic, PlanOffre } from '../core/models';
 import {
   fcfa,
   HOME_ADS,
@@ -38,7 +38,7 @@ export class HomeComponent implements OnDestroy {
   private slideTimer: ReturnType<typeof setInterval> | null = null;
   readonly cities = HOME_CITIES;
   readonly publications = HOME_PUBLICATIONS;
-  readonly plans = HOME_PLANS;
+  plans = HOME_PLANS.map((plan) => ({ ...plan, features: [...plan.features] }));
   readonly ads = HOME_ADS;
   readonly banner = HOME_ADS.find((ad) => ad.position === 'banner');
   readonly adCards = HOME_ADS.filter((ad) => ad.position === 'card');
@@ -94,6 +94,29 @@ export class HomeComponent implements OnDestroy {
   }
 
   load(): void {
+    this.api.get<PlanOffre[]>('public/offres').subscribe({
+      next: (offres) => {
+        const gratuit = offres.find((row) => row.code === 'GRATUIT');
+        if (!gratuit || gratuit.trialDays <= 0) {
+          return;
+        }
+        const label = `${gratuit.trialDays} jours d’essai`;
+        this.plans = this.plans.map((plan) => {
+          if (plan.code !== 'GRATUIT') {
+            return plan;
+          }
+          return {
+            ...plan,
+            kicker: label,
+            description: `Pour ouvrir votre maison et être visible, sans frais, avec ${gratuit.trialDays} jours d’essai des fonctionnalités.`,
+            features: plan.features.map((item) =>
+              item.includes('essai des fonctionnalités') ? `${gratuit.trialDays} jours d’essai des fonctionnalités` : item
+            )
+          };
+        });
+      },
+      error: () => undefined
+    });
     this.api.get<AtelierPublic[]>('public/ateliers').subscribe({
       next: (rows) => {
         this.ateliers = rows ?? [];

@@ -69,9 +69,9 @@ export class UserFormDialogComponent {
   private readonly notify = inject(NotifyService);
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
-  roles = ALL_ROLES;
-  labels = ROLE_LABELS;
   readonly superAdmin = this.auth.hasAnyRole(['SUPER_ADMIN']);
+  roles = this.superAdmin ? ALL_ROLES : ALL_ROLES.filter((role) => role !== 'SUPER_ADMIN');
+  labels = ROLE_LABELS;
   readonly plans = [
     { code: 'GRATUIT', label: 'Gratuit — 1 atelier' },
     { code: 'STANDARD', label: 'Standard — 1 atelier' },
@@ -124,6 +124,7 @@ export class UserFormDialogComponent {
         <table mat-table [dataSource]="rows">
           <ng-container matColumnDef="nom"><th mat-header-cell *matHeaderCellDef>Nom</th><td mat-cell *matCellDef="let r">{{ r.prenom }} {{ r.nom }}</td></ng-container>
           <ng-container matColumnDef="email"><th mat-header-cell *matHeaderCellDef>E-mail</th><td mat-cell *matCellDef="let r">{{ r.email }}</td></ng-container>
+          <ng-container matColumnDef="atelier"><th mat-header-cell *matHeaderCellDef>Compte</th><td mat-cell *matCellDef="let r">{{ r.atelierNom || '—' }}</td></ng-container>
           <ng-container matColumnDef="roles"><th mat-header-cell *matHeaderCellDef>Rôles</th><td mat-cell *matCellDef="let r">{{ (r.roles || []).join(', ') }}</td></ng-container>
           <ng-container matColumnDef="plan"><th mat-header-cell *matHeaderCellDef>Abonnement</th><td mat-cell *matCellDef="let r">{{ planLabel(r.plan) }}</td></ng-container>
           <ng-container matColumnDef="actif"><th mat-header-cell *matHeaderCellDef>Actif</th><td mat-cell *matCellDef="let r">{{ r.actif ? 'Oui' : 'Non' }}</td></ng-container>
@@ -149,7 +150,7 @@ export class UtilisateursComponent {
   total = 0;
   rows: AppUser[] = [];
   cols = this.auth.hasAnyRole(['SUPER_ADMIN'])
-    ? ['nom', 'email', 'roles', 'plan', 'actif', 'actions']
+    ? ['nom', 'email', 'atelier', 'roles', 'plan', 'actif', 'actions']
     : ['nom', 'email', 'roles', 'actif', 'actions'];
 
   planLabel(code?: string | null): string {

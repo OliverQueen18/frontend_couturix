@@ -474,6 +474,18 @@ export interface AbonnementCourant {
   peutCreer: boolean;
   sms: boolean;
   smsGatewayReady: boolean;
+  essai?: boolean;
+  essaiJours?: number;
+  essaiJoursRestants?: number | null;
+  essaiFin?: string | null;
+}
+
+export interface PlanOffre {
+  code: string;
+  libelle: string;
+  trialDays: number;
+  maxAteliers: number | null;
+  sms: boolean;
 }
 
 export interface NotificationTemplate {
@@ -494,6 +506,8 @@ export interface AppUser {
   roles: string[];
   mustChangePassword?: boolean;
   plan?: string | null;
+  atelierId?: number | null;
+  atelierNom?: string | null;
 }
 
 export interface Parametre {

@@ -122,6 +122,13 @@ export const routes: Routes = [
           import('./features/plateforme/cms-apparence.component').then((m) => m.CmsApparenceComponent)
       },
       {
+        path: 'offres',
+        canActivate: [roleGuard],
+        data: { roles: ['SUPER_ADMIN'] },
+        loadComponent: () =>
+          import('./features/plateforme/cms-offres.component').then((m) => m.CmsOffresComponent)
+      },
+      {
         path: 'dashboard',
         loadComponent: () => import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent)
       },

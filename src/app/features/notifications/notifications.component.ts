@@ -36,12 +36,12 @@ import { PhoneFieldComponent } from '../../shared/phone-field.component';
       @if (quota) {
         <p class="muted">
           @if (quota.sms) {
-            SMS clients inclus (offre {{ quota.libelle }}).
+            SMS clients inclus (offre {{ quota.libelle }}{{ quota.essai ? ', période d’essai' : '' }}).
             @if (!quota.smsGatewayReady) {
               La passerelle n’est pas encore active : les SMS sont enregistrés, sans envoi réel.
             }
           } @else {
-            Les SMS clients commencent à l’offre Standard.
+            Les SMS clients commencent à l’offre Standard, ou pendant l’essai de l’offre Gratuite.
             <a routerLink="/" fragment="tarifs">Voir les tarifs</a>
           }
         </p>

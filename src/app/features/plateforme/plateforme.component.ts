@@ -46,6 +46,7 @@ export class PlateformeComponent {
     { label: 'Ateliers', path: '/app/ateliers', icon: 'storefront', value: '—' },
     { label: 'Comptes clients', path: '/app/comptes-clients', icon: 'person', value: '—' },
     { label: 'Utilisateurs', path: '/app/utilisateurs', icon: 'manage_accounts', value: '—' },
+    { label: 'Offres', path: '/app/offres', icon: 'workspace_premium', value: 'Délais' },
         { label: 'Pages', path: '/app/site/pages', icon: 'article', value: '—' },
         { label: 'Menus', path: '/app/site/menus', icon: 'menu', value: '—' },
         { label: 'En-tête et pied', path: '/app/site/apparence', icon: 'web', value: 'CMS' }
@@ -58,6 +59,7 @@ export class PlateformeComponent {
           { label: 'Ateliers', path: '/app/ateliers', icon: 'storefront', value: String(res.ateliers) },
           { label: 'Comptes clients', path: '/app/comptes-clients', icon: 'person', value: String(res.comptesClients) },
           { label: 'Utilisateurs', path: '/app/utilisateurs', icon: 'manage_accounts', value: String(res.utilisateurs) },
+          { label: 'Offres', path: '/app/offres', icon: 'workspace_premium', value: 'Délais' },
           { label: 'Pages', path: '/app/site/pages', icon: 'article', value: String(res.pages) },
           { label: 'Menus', path: '/app/site/menus', icon: 'menu', value: String(res.menus) },
           { label: 'En-tête et pied', path: '/app/site/apparence', icon: 'web', value: 'CMS' }

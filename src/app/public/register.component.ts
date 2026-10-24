@@ -54,7 +54,7 @@ export class RegisterComponent {
   mapZoom = 13;
   readonly countryOptions = countryOptions;
   readonly offers = [
-    { code: 'GRATUIT', name: 'Gratuit', price: fcfa(0), limit: '1 atelier', tone: 'free', kicker: 'Découverte' },
+    { code: 'GRATUIT', name: 'Gratuit', price: fcfa(0), limit: '1 atelier', tone: 'free', kicker: '15 jours d’essai' },
     { code: 'STANDARD', name: 'Standard', price: fcfa(15000), limit: '1 atelier', tone: 'standard', kicker: 'Présence' },
     { code: 'PREMIUM', name: 'Premium', price: fcfa(35000), limit: 'Jusqu’à 5 ateliers', tone: 'premium', kicker: 'Le plus choisi' },
     { code: 'GOLD', name: 'Gold', price: fcfa(60000), limit: 'Ateliers illimités', tone: 'gold', kicker: 'Maison' }
