@@ -28,7 +28,7 @@ import { UserFormDialogComponent } from '../utilisateurs/utilisateurs.component'
         </div>
       </header>
       <div class="filters">
-        <mat-form-field appearance="outline"><mat-label>Recherche</mat-label><input matInput [(ngModel)]="q" (keyup.enter)="load()"></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Recherche</mat-label><mat-icon matPrefix>search</mat-icon><input matInput [(ngModel)]="q" (keyup.enter)="load()"></mat-form-field>
         <button mat-stroked-button type="button" (click)="load()">Rechercher</button>
       </div>
       <div class="table-card">

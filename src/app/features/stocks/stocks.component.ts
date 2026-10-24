@@ -15,6 +15,7 @@ import { requireValid } from '../../core/forms';
 import { ArticleStock, InventaireResultat, MouvementStock, PageResponse } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
 import { money } from '../../core/format';
+import { bindAtelierScope } from '../../core/platform-scope.service';
 import { BarcodeScanDialogComponent } from '../../shared/barcode-scan-dialog.component';
 
 const UNITES_DEFAUT: { value: string; label: string }[] = [
@@ -376,7 +377,7 @@ export class MouvementFormDialogComponent {
       <mat-tab-group>
         <mat-tab label="Articles">
           <div class="filters" style="margin-top:1rem">
-            <mat-form-field appearance="outline"><mat-label>Recherche</mat-label><input matInput [(ngModel)]="q" (keyup.enter)="load()"></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Recherche</mat-label><mat-icon matPrefix>search</mat-icon><input matInput [(ngModel)]="q" (keyup.enter)="load()"></mat-form-field>
             <button mat-stroked-button (click)="load()">Rechercher</button>
           </div>
           <div class="table-card">
@@ -508,7 +509,7 @@ export class StocksComponent {
   money = money;
 
   constructor() {
-    this.load();
+    bindAtelierScope(() => this.load());
   }
 
   get ecarts(): number {

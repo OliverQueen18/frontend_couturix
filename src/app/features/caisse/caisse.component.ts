@@ -14,6 +14,7 @@ import { requireValid } from '../../core/forms';
 import { Caisse, CaisseOperation, TicketSignataire } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
 import { money } from '../../core/format';
+import { bindAtelierScope } from '../../core/platform-scope.service';
 
 const CATEGORIES_DEFAUT: { value: string; label: string }[] = [
   { value: 'PAIEMENT_CLIENT', label: 'Paiement client' },
@@ -199,9 +200,11 @@ export class CaisseComponent {
   });
 
   constructor() {
-    this.load();
-    this.loadCategories();
-    this.loadSignataires();
+    bindAtelierScope(() => {
+      this.load();
+      this.loadCategories();
+      this.loadSignataires();
+    });
   }
 
   typeLabel(value?: string | null): string {

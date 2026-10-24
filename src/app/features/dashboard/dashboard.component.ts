@@ -9,12 +9,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
-import { Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { AuthService } from '../../core/auth.service';
 import { AbonnementCourant, DashboardKpi } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
 import { money, periodRange } from '../../core/format';
+import { bindAtelierScope } from '../../core/platform-scope.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -36,8 +35,6 @@ import { money, periodRange } from '../../core/format';
 export class DashboardComponent {
   private readonly api = inject(ApiService);
   private readonly notify = inject(NotifyService);
-  private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
   period: 'today' | 'week' | 'month' | 'quarter' | 'year' | 'custom' = 'month';
   customFrom = '';
   customTo = '';
@@ -47,15 +44,11 @@ export class DashboardComponent {
   money = money;
 
   constructor() {
-    if (this.auth.isSuperAdmin()) {
-      void this.router.navigateByUrl('/app/plateforme');
-      return;
-    }
     this.api.get<AbonnementCourant>('abonnements/courant').subscribe({
       next: (quota) => (this.quota = quota),
       error: () => undefined
     });
-    this.load();
+    bindAtelierScope(() => this.load());
   }
 
   load(): void {

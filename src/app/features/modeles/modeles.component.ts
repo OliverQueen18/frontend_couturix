@@ -15,6 +15,7 @@ import { requireValid } from '../../core/forms';
 import { CategorieModele, Modele, PageResponse, STATUT_LABELS } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
 import { joursLabel } from '../../core/format';
+import { bindAtelierScope } from '../../core/platform-scope.service';
 
 export interface ModeleFormData {
   modele: Modele | null;
@@ -201,7 +202,7 @@ export class ModelesComponent {
           next: (page) => (this.categories = page.content ?? [])
         })
     });
-    this.load();
+    bindAtelierScope(() => this.load());
   }
 
   load(): void {

@@ -1,15 +1,19 @@
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { FormsModule } from '@angular/forms';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { filter, map } from 'rxjs';
 import { AuthService } from '../core/auth.service';
+import { PlatformScopeService } from '../core/platform-scope.service';
 
 interface NavItem {
   label: string;
@@ -30,12 +34,15 @@ interface NavGroup {
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
+    FormsModule,
     MatSidenavModule,
     MatToolbarModule,
     MatListModule,
     MatIconModule,
     MatButtonModule,
-    MatMenuModule
+    MatMenuModule,
+    MatFormFieldModule,
+    MatSelectModule
   ],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss'
@@ -43,6 +50,7 @@ interface NavGroup {
 export class ShellComponent {
   private readonly router = inject(Router);
   readonly auth = inject(AuthService);
+  readonly scope = inject(PlatformScopeService);
   title = 'Tableau de bord';
   titleIcon = 'dashboard';
   readonly desktop = toSignal(
@@ -60,15 +68,16 @@ export class ShellComponent {
         { label: 'Ateliers', icon: 'storefront', path: '/app/ateliers' },
         { label: 'Comptes clients', icon: 'person', path: '/app/comptes-clients' },
         { label: 'Utilisateurs', icon: 'manage_accounts', path: '/app/utilisateurs' },
-        { label: 'Offres', icon: 'workspace_premium', path: '/app/offres' }
+        { label: 'Offres', icon: 'workspace_premium', path: '/app/offres', roles: ['SUPER_ADMIN'] }
       ]
     },
     {
       label: 'Contenu du site',
       items: [
-        { label: 'Pages', icon: 'article', path: '/app/site/pages' },
-        { label: 'Menus', icon: 'menu', path: '/app/site/menus' },
-        { label: 'En-tête et pied', icon: 'web', path: '/app/site/apparence' }
+        { label: 'Pages', icon: 'article', path: '/app/site/pages', roles: ['SUPER_ADMIN'] },
+        { label: 'Menus', icon: 'menu', path: '/app/site/menus', roles: ['SUPER_ADMIN'] },
+        { label: 'Slider', icon: 'view_carousel', path: '/app/site/slider', roles: ['SUPER_ADMIN'] },
+        { label: 'En-tête et pied', icon: 'web', path: '/app/site/apparence', roles: ['SUPER_ADMIN'] }
       ]
     }
   ];
@@ -113,7 +122,7 @@ export class ShellComponent {
       items: [
         { label: 'Tailleurs', icon: 'content_cut', path: '/app/tailleurs' },
         { label: 'Notifications', icon: 'notifications', path: '/app/notifications' },
-        { label: 'Utilisateurs', icon: 'manage_accounts', path: '/app/utilisateurs', roles: ['SUPER_ADMIN', 'ADMIN'] },
+        { label: 'Utilisateurs', icon: 'manage_accounts', path: '/app/utilisateurs', roles: ['SUPER_ADMIN', 'ADMIN', 'GERANT'] },
         { label: 'Ateliers', icon: 'storefront', path: '/app/ateliers', roles: ['SUPER_ADMIN', 'ADMIN', 'GERANT'] },
         { label: 'Paramètres', icon: 'settings', path: '/app/parametres', roles: ['SUPER_ADMIN', 'ADMIN', 'GERANT'] }
       ]
@@ -125,22 +134,39 @@ export class ShellComponent {
       const item = this.visibleGroups()
         .flatMap((g) => g.items)
         .find((nav) => e.urlAfterRedirects.startsWith(nav.path));
-      this.title = item?.label ?? (this.auth.isSuperAdmin() ? 'Administration du site' : 'CouturiX');
+      this.title = item?.label ?? (this.auth.isPlatformTeam() ? 'Équipe CouturiX' : 'CouturiX');
       this.titleIcon = item?.icon ?? 'auto_awesome';
       this.closeMenu();
     });
   }
 
   visibleGroups(): NavGroup[] {
-    if (this.auth.isSuperAdmin()) {
-      return this.platformGroups;
+    const platform = this.auth.isPlatformTeam();
+    const metier = this.groups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => {
+          if (platform && group.label === 'Maison' && (item.path === '/app/ateliers' || item.path === '/app/utilisateurs')) {
+            return false;
+          }
+          return !item.roles || this.auth.hasAnyRole(item.roles);
+        })
+      }))
+      .filter((group) => group.items.length);
+    if (!platform) {
+      return metier;
     }
-    return this.groups
+    const cms = this.platformGroups
       .map((group) => ({
         ...group,
         items: group.items.filter((item) => !item.roles || this.auth.hasAnyRole(item.roles))
       }))
       .filter((group) => group.items.length);
+    return [...cms, ...metier];
+  }
+
+  onScope(id: number | null): void {
+    this.scope.setAtelier(id);
   }
 
   toggleMenu(): void {

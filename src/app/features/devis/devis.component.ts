@@ -3,6 +3,7 @@ import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
@@ -10,15 +11,42 @@ import { MatTableModule } from '@angular/material/table';
 import { ApiService } from '../../core/api.service';
 import { Devis, PageResponse, STATUT_LABELS } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
+import { bindAtelierScope } from '../../core/platform-scope.service';
+import { matchesSearch } from '../../core/search';
 
 @Component({
   selector: 'app-devis',
   standalone: true,
-  imports: [FormsModule, CurrencyPipe, DatePipe, MatTableModule, MatPaginatorModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [
+    FormsModule,
+    CurrencyPipe,
+    DatePipe,
+    MatTableModule,
+    MatPaginatorModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatIconModule
+  ],
   template: `
     <section class="page">
-      <header class="page-header"><h1>Devis</h1></header>
+      <header class="page-header">
+        <div class="page-heading">
+          <span class="page-icon"><mat-icon>request_quote</mat-icon></span>
+          <div>
+            <h1>Devis</h1>
+            <p class="muted">Propositions commerciales de la maison</p>
+          </div>
+        </div>
+        <button mat-stroked-button (click)="load()">Actualiser</button>
+      </header>
       <div class="filters">
+        <mat-form-field appearance="outline">
+          <mat-label>Recherche</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput [(ngModel)]="q" (ngModelChange)="apply()" placeholder="N°, client">
+        </mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Statut</mat-label>
           <mat-select [(ngModel)]="statut" (selectionChange)="load()">
             <mat-option value="">Tous</mat-option>
@@ -55,33 +83,42 @@ import { NotifyService } from '../../core/notify.service';
 export class DevisComponent {
   private readonly api = inject(ApiService);
   private readonly notify = inject(NotifyService);
+  q = '';
   statut = '';
   page = 0;
   size = 20;
   total = 0;
+  all: Devis[] = [];
   rows: Devis[] = [];
   cols = ['numero', 'client', 'total', 'validite', 'statut', 'actions'];
   labels = STATUT_LABELS;
 
   constructor() {
-    this.load();
+    bindAtelierScope(() => this.load());
   }
 
   load(): void {
-    this.api.get<Devis[] | PageResponse<Devis>>('devis', { statut: this.statut, page: this.page, size: this.size }).subscribe({
+    this.page = 0;
+    this.api.get<Devis[] | PageResponse<Devis>>('devis', { statut: this.statut, page: 0, size: 200 }).subscribe({
       next: (res) => {
-        const page = this.api.asPage(res, this.page, this.size);
-        this.rows = page.content ?? [];
-        this.total = page.totalElements ?? 0;
+        const page = this.api.asPage(res, 0, 200);
+        this.all = page.content ?? [];
+        this.apply();
       },
       error: (err) => this.notify.error(err)
     });
   }
 
+  apply(): void {
+    const filtered = this.all.filter((row) => matchesSearch(this.q, row.numero, row.clientNom, this.labels[row.statut], row.statut));
+    this.total = filtered.length;
+    this.rows = filtered.slice(this.page * this.size, this.page * this.size + this.size);
+  }
+
   onPage(e: PageEvent): void {
     this.page = e.pageIndex;
     this.size = e.pageSize;
-    this.load();
+    this.apply();
   }
 
   accepter(row: Devis): void {

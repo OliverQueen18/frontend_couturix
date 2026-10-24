@@ -13,6 +13,7 @@ import { ApiService } from '../../core/api.service';
 import { requireValid } from '../../core/forms';
 import { PageResponse, Specialite, Tailleur } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
+import { bindAtelierScope } from '../../core/platform-scope.service';
 import { PhoneFieldComponent } from '../../shared/phone-field.component';
 
 @Component({
@@ -181,15 +182,21 @@ export class TailleurFormDialogComponent {
 @Component({
   selector: 'app-tailleurs',
   standalone: true,
-  imports: [FormsModule, MatTableModule, MatPaginatorModule, MatButtonModule, MatFormFieldModule, MatInputModule],
+  imports: [FormsModule, MatTableModule, MatPaginatorModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatIconModule],
   template: `
     <section class="page">
       <header class="page-header">
-        <h1>Tailleurs</h1>
+        <div class="page-heading">
+          <span class="page-icon"><mat-icon>content_cut</mat-icon></span>
+          <div>
+            <h1>Tailleurs</h1>
+            <p class="muted">Équipe de confection de la maison</p>
+          </div>
+        </div>
         <button mat-flat-button color="primary" (click)="edit()">Nouveau</button>
       </header>
       <div class="filters">
-        <mat-form-field appearance="outline"><mat-label>Recherche</mat-label><input matInput [(ngModel)]="q" (keyup.enter)="load()"></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Recherche</mat-label><mat-icon matPrefix>search</mat-icon><input matInput [(ngModel)]="q" (keyup.enter)="load()"></mat-form-field>
         <button mat-stroked-button (click)="load()">Rechercher</button>
       </div>
       <div class="table-card">
@@ -223,7 +230,7 @@ export class TailleursComponent {
 
   constructor() {
     this.loadSpecialites();
-    this.load();
+    bindAtelierScope(() => this.load());
   }
 
   private loadSpecialites(): void {

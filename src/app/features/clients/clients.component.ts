@@ -13,6 +13,7 @@ import { ApiService } from '../../core/api.service';
 import { requireValid } from '../../core/forms';
 import { Client, ClientRequest, PageResponse } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
+import { bindAtelierScope } from '../../core/platform-scope.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 import { PhoneFieldComponent } from '../../shared/phone-field.component';
 
@@ -169,7 +170,7 @@ export class ClientsComponent {
   cols = ['nom', 'telephone', 'email', 'solde', 'actions'];
 
   constructor() {
-    this.load();
+    bindAtelierScope(() => this.load());
   }
 
   load(): void {

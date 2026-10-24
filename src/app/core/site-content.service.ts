@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { ApiService } from './api.service';
-import { SiteMenu, SiteMenuLocation, SitePage, SiteSettings, SiteSnapshot } from './models';
+import { SiteMenu, SiteMenuLocation, SitePage, SiteSettings, SiteSlide, SiteSnapshot } from './models';
 
 const FALLBACK_SETTINGS: SiteSettings = {
   brandName: 'CouturiX',
@@ -43,7 +43,8 @@ export class SiteContentService {
   readonly snapshot = signal<SiteSnapshot>({
     settings: FALLBACK_SETTINGS,
     menus: FALLBACK_MENUS,
-    pages: []
+    pages: [],
+    slides: []
   });
   private loading = false;
   private retries = 0;
@@ -64,7 +65,8 @@ export class SiteContentService {
         this.snapshot.set({
           settings: { ...FALLBACK_SETTINGS, ...res.settings },
           menus: res.menus?.length ? res.menus : FALLBACK_MENUS,
-          pages: res.pages ?? []
+          pages: res.pages ?? [],
+          slides: res.slides ?? []
         });
       },
       error: () => {
@@ -89,6 +91,12 @@ export class SiteContentService {
 
   page(slug: string): SitePage | undefined {
     return this.snapshot().pages.find((item) => item.slug === slug);
+  }
+
+  slides(): SiteSlide[] {
+    return this.snapshot().slides
+      .filter((item) => item.visible !== false && !!item.imageUrl)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
   }
 
   parts(path: string): { link: string; fragment?: string; href?: string } {

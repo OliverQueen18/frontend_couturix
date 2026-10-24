@@ -35,12 +35,22 @@
                (mouseenter)="pauseSlides()" (mouseleave)="startSlides()">
         @for (slide of banners; track slide.id; let i = $index) {
           <article class="slide" [class.on]="i === slideIndex" [attr.aria-hidden]="i !== slideIndex">
-            <img [src]="slide.image" [alt]="slide.title">
+            <img [src]="slide.image" [alt]="slide.title" (error)="imgFallback($event)">
             <div class="slide-copy">
-              <p>{{ slide.kicker }}</p>
+              @if (slide.kicker) {
+                <p>{{ slide.kicker }}</p>
+              }
               <h2>{{ slide.title }}</h2>
-              <p>{{ slide.text }}</p>
-              <a class="btn btn-pink" [routerLink]="slide.link">{{ slide.cta }}</a>
+              @if (slide.text) {
+                <p>{{ slide.text }}</p>
+              }
+              @if (slide.cta) {
+                @if (cta(slide).href) {
+                  <a class="btn btn-pink" [href]="cta(slide).href" target="_blank" rel="noopener">{{ slide.cta }}</a>
+                } @else {
+                  <a class="btn btn-pink" [routerLink]="cta(slide).link" [fragment]="cta(slide).fragment">{{ slide.cta }}</a>
+                }
+              }
             </div>
           </article>
         }

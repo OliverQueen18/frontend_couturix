@@ -89,14 +89,14 @@ export const routes: Routes = [
       {
         path: 'plateforme',
         canActivate: [roleGuard],
-        data: { roles: ['SUPER_ADMIN'] },
+        data: { roles: ['SUPER_ADMIN', 'ADMIN'] },
         loadComponent: () =>
           import('./features/plateforme/plateforme.component').then((m) => m.PlateformeComponent)
       },
       {
         path: 'comptes-clients',
         canActivate: [roleGuard],
-        data: { roles: ['SUPER_ADMIN'] },
+        data: { roles: ['SUPER_ADMIN', 'ADMIN'] },
         loadComponent: () =>
           import('./features/plateforme/comptes-clients.component').then((m) => m.ComptesClientsComponent)
       },
@@ -113,6 +113,13 @@ export const routes: Routes = [
         data: { roles: ['SUPER_ADMIN'] },
         loadComponent: () =>
           import('./features/plateforme/cms-menus.component').then((m) => m.CmsMenusComponent)
+      },
+      {
+        path: 'site/slider',
+        canActivate: [roleGuard],
+        data: { roles: ['SUPER_ADMIN'] },
+        loadComponent: () =>
+          import('./features/plateforme/cms-slider.component').then((m) => m.CmsSliderComponent)
       },
       {
         path: 'site/apparence',
@@ -216,7 +223,7 @@ export const routes: Routes = [
       {
         path: 'utilisateurs',
         canActivate: [roleGuard],
-        data: { roles: ['SUPER_ADMIN', 'ADMIN'] },
+        data: { roles: ['SUPER_ADMIN', 'ADMIN', 'GERANT'] },
         loadComponent: () =>
           import('./features/utilisateurs/utilisateurs.component').then((m) => m.UtilisateursComponent)
       },

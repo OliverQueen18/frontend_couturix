@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -14,12 +14,14 @@ import { AuthService } from '../../core/auth.service';
 import { NotifyService } from '../../core/notify.service';
 import { BAMAKO, DEFAULT_COUNTRY, countryOptions, mapZoomFor } from '../../shared/countries';
 import { PhoneFieldComponent } from '../../shared/phone-field.component';
+import { matchesSearch } from '../../core/search';
 import { StreetMapComponent } from '../../shared/street-map.component';
 
 @Component({
   selector: 'app-ateliers',
   standalone: true,
   imports: [
+    FormsModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatFormFieldModule,
@@ -49,10 +51,15 @@ import { StreetMapComponent } from '../../shared/street-map.component';
       <div class="atelier-layout">
         <aside class="cx-form-card tree-card">
           <h2>Organisation</h2>
-          @if (flat.length === 0) {
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Rechercher</mat-label>
+            <mat-icon matPrefix>search</mat-icon>
+            <input matInput [(ngModel)]="q" [ngModelOptions]="{standalone: true}" placeholder="Nom, ville, sigle">
+          </mat-form-field>
+          @if (filteredFlat().length === 0) {
             <p class="muted">Aucun atelier</p>
           }
-          @for (row of flat; track row.node.id) {
+          @for (row of filteredFlat(); track row.node.id) {
             <button type="button" class="tree-node" [class.active]="selected?.id === row.node.id"
                     [style.paddingLeft.px]="12 + row.level * 16" (click)="select(row.node)">
               {{ row.node.sigle ? row.node.sigle + ' — ' : '' }}{{ row.node.nom }}
@@ -211,9 +218,10 @@ export class AteliersComponent {
     actif: [true]
   });
 
+  q = '';
   get quotaLabel(): string {
-    if (this.auth.hasAnyRole(['SUPER_ADMIN'])) {
-      return 'Super administrateur — tous les ateliers de la plateforme';
+    if (this.auth.isPlatformTeam()) {
+      return 'Équipe CouturiX — toutes les maisons de la plateforme';
     }
     if (!this.quota) {
       return 'Identité, informations légales, carte et ateliers';
@@ -375,6 +383,12 @@ export class AteliersComponent {
       },
       error: (err) => this.notify.error(err)
     });
+  }
+
+  filteredFlat(): { node: Atelier; level: number }[] {
+    return this.flat.filter((row) =>
+      matchesSearch(this.q, row.node.nom, row.node.sigle, row.node.ville, row.node.email, row.node.telephone)
+    );
   }
 
   private flatten(nodes: Atelier[], level: number): { node: Atelier; level: number }[] {

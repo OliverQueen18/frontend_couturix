@@ -1,8 +1,9 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
@@ -11,14 +12,24 @@ import { ApiService } from '../../core/api.service';
 import { requireValid } from '../../core/forms';
 import { PageResponse, Paie, STATUT_LABELS, Tailleur } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
+import { bindAtelierScope } from '../../core/platform-scope.service';
+import { matchesSearch } from '../../core/search';
 
 @Component({
   selector: 'app-paie',
   standalone: true,
-  imports: [ReactiveFormsModule, CurrencyPipe, DatePipe, MatTableModule, MatPaginatorModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [FormsModule, ReactiveFormsModule, CurrencyPipe, DatePipe, MatTableModule, MatPaginatorModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatIconModule],
   template: `
     <section class="page">
-      <header class="page-header"><h1>Paie des tailleurs</h1></header>
+      <header class="page-header">
+        <div class="page-heading">
+          <span class="page-icon"><mat-icon>account_balance_wallet</mat-icon></span>
+          <div>
+            <h1>Paie des tailleurs</h1>
+            <p class="muted">Calcul, validation et paiement des salaires</p>
+          </div>
+        </div>
+      </header>
       <form class="card-block dialog-form" [formGroup]="form" (ngSubmit)="calculer()" style="margin-bottom:1rem">
         <h2>Calculer une paie</h2>
         <div class="form-grid">
@@ -34,6 +45,13 @@ import { NotifyService } from '../../core/notify.service';
         </div>
         <button mat-flat-button color="primary" type="submit">Calculer</button>
       </form>
+      <div class="filters">
+        <mat-form-field appearance="outline">
+          <mat-label>Recherche</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput [(ngModel)]="q" (ngModelChange)="apply()" placeholder="Tailleur, statut">
+        </mat-form-field>
+      </div>
       <div class="table-card">
         <table mat-table [dataSource]="rows">
           <ng-container matColumnDef="tailleur"><th mat-header-cell *matHeaderCellDef>Tailleur</th><td mat-cell *matCellDef="let r">{{ r.tailleurNom }}</td></ng-container>
@@ -59,7 +77,9 @@ export class PaieComponent {
   private readonly api = inject(ApiService);
   private readonly notify = inject(NotifyService);
   private readonly fb = inject(FormBuilder);
+  q = '';
   tailleurs: Tailleur[] = [];
+  all: Paie[] = [];
   rows: Paie[] = [];
   page = 0;
   size = 20;
@@ -75,27 +95,38 @@ export class PaieComponent {
   });
 
   constructor() {
-    this.api.get<Tailleur[] | PageResponse<Tailleur>>('tailleurs', { size: 200 }).subscribe({
-      next: (p) => (this.tailleurs = Array.isArray(p) ? p : p.content ?? [])
+    bindAtelierScope(() => {
+      this.api.get<Tailleur[] | PageResponse<Tailleur>>('tailleurs', { size: 200 }).subscribe({
+        next: (p) => (this.tailleurs = Array.isArray(p) ? p : p.content ?? [])
+      });
+      this.load();
     });
-    this.load();
   }
 
   load(): void {
-    this.api.get<Paie[] | PageResponse<Paie>>('paies', { page: this.page, size: this.size }).subscribe({
+    this.page = 0;
+    this.api.get<Paie[] | PageResponse<Paie>>('paies', { page: 0, size: 200 }).subscribe({
       next: (res) => {
-        const page = this.api.asPage(res, this.page, this.size);
-        this.rows = page.content ?? [];
-        this.total = page.totalElements ?? 0;
+        const page = this.api.asPage(res, 0, 200);
+        this.all = page.content ?? [];
+        this.apply();
       },
       error: (err) => this.notify.error(err)
     });
   }
 
+  apply(): void {
+    const filtered = this.all.filter((row) =>
+      matchesSearch(this.q, row.tailleurNom, this.labels[row.statut], row.statut)
+    );
+    this.total = filtered.length;
+    this.rows = filtered.slice(this.page * this.size, this.page * this.size + this.size);
+  }
+
   onPage(e: PageEvent): void {
     this.page = e.pageIndex;
     this.size = e.pageSize;
-    this.load();
+    this.apply();
   }
 
   calculer(): void {

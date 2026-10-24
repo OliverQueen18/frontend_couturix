@@ -23,6 +23,7 @@ import {
 import { NotifyService } from '../../core/notify.service';
 import { requireValid } from '../../core/forms';
 import { isRetard, isoDate } from '../../core/format';
+import { bindAtelierScope } from '../../core/platform-scope.service';
 
 @Component({
   selector: 'app-commande-form-dialog',
@@ -222,7 +223,7 @@ export class CommandesComponent {
   labels = STATUT_LABELS;
 
   constructor() {
-    this.load();
+    bindAtelierScope(() => this.load());
   }
 
   late(row: Commande): boolean {

@@ -1,8 +1,9 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
@@ -12,14 +13,24 @@ import { requireValid } from '../../core/forms';
 import { isoDate } from '../../core/format';
 import { Client, Commande, PageResponse, Paiement } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
+import { bindAtelierScope } from '../../core/platform-scope.service';
+import { matchesSearch } from '../../core/search';
 
 @Component({
   selector: 'app-paiements',
   standalone: true,
-  imports: [ReactiveFormsModule, CurrencyPipe, DatePipe, MatTableModule, MatPaginatorModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [FormsModule, ReactiveFormsModule, CurrencyPipe, DatePipe, MatTableModule, MatPaginatorModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatIconModule],
   template: `
     <section class="page">
-      <header class="page-header"><h1>Paiements</h1></header>
+      <header class="page-header">
+        <div class="page-heading">
+          <span class="page-icon"><mat-icon>payments</mat-icon></span>
+          <div>
+            <h1>Paiements</h1>
+            <p class="muted">Encaissements clients de la maison</p>
+          </div>
+        </div>
+      </header>
       <form class="card-block dialog-form" [formGroup]="form" (ngSubmit)="save()" style="margin-bottom:1rem">
         <h2>Enregistrer un paiement</h2>
         <div class="form-grid">
@@ -50,6 +61,13 @@ import { NotifyService } from '../../core/notify.service';
         </div>
         <button mat-flat-button color="primary" type="submit">Enregistrer</button>
       </form>
+      <div class="filters">
+        <mat-form-field appearance="outline">
+          <mat-label>Recherche</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput [(ngModel)]="q" (ngModelChange)="apply()" placeholder="Client, moyen, référence">
+        </mat-form-field>
+      </div>
       <div class="table-card">
         <table mat-table [dataSource]="rows">
           <ng-container matColumnDef="date"><th mat-header-cell *matHeaderCellDef>Date</th><td mat-cell *matCellDef="let r">{{ r.datePaiement | date:'dd/MM/yyyy' }}</td></ng-container>
@@ -68,8 +86,10 @@ export class PaiementsComponent {
   private readonly api = inject(ApiService);
   private readonly notify = inject(NotifyService);
   private readonly fb = inject(FormBuilder);
+  q = '';
   clients: Client[] = [];
   commandes: Commande[] = [];
+  all: Paiement[] = [];
   rows: Paiement[] = [];
   page = 0;
   size = 20;
@@ -86,26 +106,35 @@ export class PaiementsComponent {
   });
 
   constructor() {
-    this.api.get<PageResponse<Client>>('clients', { size: 200 }).subscribe({ next: (p) => (this.clients = p.content ?? []) });
-    this.api.get<PageResponse<Commande>>('commandes', { size: 200 }).subscribe({ next: (p) => (this.commandes = p.content ?? []) });
-    this.load();
+    bindAtelierScope(() => {
+      this.api.get<PageResponse<Client>>('clients', { size: 200 }).subscribe({ next: (p) => (this.clients = p.content ?? []) });
+      this.api.get<PageResponse<Commande>>('commandes', { size: 200 }).subscribe({ next: (p) => (this.commandes = p.content ?? []) });
+      this.load();
+    });
   }
 
   load(): void {
-    this.api.get<Paiement[] | PageResponse<Paiement>>('paiements', { page: this.page, size: this.size }).subscribe({
+    this.page = 0;
+    this.api.get<Paiement[] | PageResponse<Paiement>>('paiements', { page: 0, size: 200 }).subscribe({
       next: (res) => {
-        const page = this.api.asPage(res, this.page, this.size);
-        this.rows = page.content ?? [];
-        this.total = page.totalElements ?? 0;
+        const page = this.api.asPage(res, 0, 200);
+        this.all = page.content ?? [];
+        this.apply();
       },
       error: (err) => this.notify.error(err)
     });
   }
 
+  apply(): void {
+    const filtered = this.all.filter((row) => matchesSearch(this.q, row.clientNom, row.moyen, row.reference, row.notes));
+    this.total = filtered.length;
+    this.rows = filtered.slice(this.page * this.size, this.page * this.size + this.size);
+  }
+
   onPage(e: PageEvent): void {
     this.page = e.pageIndex;
     this.size = e.pageSize;
-    this.load();
+    this.apply();
   }
 
   save(): void {

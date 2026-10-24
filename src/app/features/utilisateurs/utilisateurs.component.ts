@@ -12,7 +12,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
 import { requireValid } from '../../core/forms';
-import { ALL_ROLES, AppUser, PageResponse, ROLE_LABELS } from '../../core/models';
+import { ALL_ROLES, AppUser, Atelier, PageResponse, ROLE_LABELS } from '../../core/models';
+import { bindAtelierScope } from '../../core/platform-scope.service';
 import { NotifyService } from '../../core/notify.service';
 import { PasswordToggleComponent } from '../../shared/password-toggle.component';
 import { PhoneFieldComponent } from '../../shared/phone-field.component';
@@ -44,6 +45,17 @@ import { PhoneFieldComponent } from '../../shared/phone-field.component';
               @for (role of roles; track role) { <mat-option [value]="role">{{ labels[role] }}</mat-option> }
             </mat-select>
           </mat-form-field>
+          @if (platform) {
+            <mat-form-field appearance="outline" class="full"><mat-label>Atelier</mat-label>
+              <mat-icon matPrefix>storefront</mat-icon>
+              <mat-select formControlName="atelierId">
+                <mat-option [value]="null">Aucun — équipe CouturiX</mat-option>
+                @for (atelier of ateliers; track atelier.id) {
+                  <mat-option [value]="atelier.id">{{ atelier.nom }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          }
           @if (superAdmin) {
             <mat-form-field appearance="outline" class="full"><mat-label>Abonnement</mat-label>
               <mat-icon matPrefix>workspace_premium</mat-icon>
@@ -70,8 +82,14 @@ export class UserFormDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
   readonly superAdmin = this.auth.hasAnyRole(['SUPER_ADMIN']);
-  roles = this.superAdmin ? ALL_ROLES : ALL_ROLES.filter((role) => role !== 'SUPER_ADMIN');
+  readonly platform = this.auth.isPlatformTeam();
+  roles = this.superAdmin
+    ? ALL_ROLES
+    : this.platform
+      ? ALL_ROLES.filter((role) => role !== 'SUPER_ADMIN')
+      : ALL_ROLES.filter((role) => !['SUPER_ADMIN', 'ADMIN', 'CLIENT'].includes(role));
   labels = ROLE_LABELS;
+  ateliers: Atelier[] = [];
   readonly plans = [
     { code: 'GRATUIT', label: 'Gratuit — 1 atelier' },
     { code: 'STANDARD', label: 'Standard — 1 atelier' },
@@ -86,15 +104,40 @@ export class UserFormDialogComponent {
     password: ['', this.data ? [] : [Validators.required, Validators.minLength(8)]],
     roles: [this.data?.roles ?? []],
     plan: [this.data?.plan ?? 'GRATUIT'],
+    atelierId: [this.data?.atelierId ?? null as number | null],
     actif: [this.data?.actif ?? true]
   });
+
+  constructor() {
+    if (this.platform) {
+      this.api.get<Atelier[]>('ateliers').subscribe({
+        next: (rows) => (this.ateliers = this.flatten(rows ?? [])),
+        error: () => undefined
+      });
+    }
+  }
+
+  private flatten(rows: Atelier[]): Atelier[] {
+    const out: Atelier[] = [];
+    for (const row of rows) {
+      out.push(row);
+      if (row.enfants?.length) {
+        out.push(...this.flatten(row.enfants));
+      }
+    }
+    return out;
+  }
 
   save(): void {
     if (!requireValid(this.form, this.notify)) {
       return;
     }
-    const { plan, ...rest } = this.form.getRawValue();
-    const body = this.superAdmin ? { ...rest, plan } : rest;
+    const { plan, atelierId, ...rest } = this.form.getRawValue();
+    const body = this.superAdmin
+      ? { ...rest, plan, atelierId }
+      : this.platform
+        ? { ...rest, atelierId }
+        : rest;
     const req = this.data?.id ? this.api.put(`users/${this.data.id}`, body) : this.api.post('users', body);
     req.subscribe({
       next: () => {
@@ -109,15 +152,21 @@ export class UserFormDialogComponent {
 @Component({
   selector: 'app-utilisateurs',
   standalone: true,
-  imports: [FormsModule, MatTableModule, MatPaginatorModule, MatButtonModule, MatFormFieldModule, MatInputModule],
+  imports: [FormsModule, MatTableModule, MatPaginatorModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatIconModule],
   template: `
     <section class="page">
       <header class="page-header">
-        <h1>Utilisateurs</h1>
+        <div class="page-heading">
+          <span class="page-icon"><mat-icon>manage_accounts</mat-icon></span>
+          <div>
+            <h1>Utilisateurs</h1>
+            <p class="muted">{{ auth.isPlatformTeam() ? 'Comptes de l’équipe CouturiX et des maisons' : 'Comptes de votre maison' }}</p>
+          </div>
+        </div>
         <button mat-flat-button color="primary" (click)="edit()">Nouvel utilisateur</button>
       </header>
       <div class="filters">
-        <mat-form-field appearance="outline"><mat-label>Recherche</mat-label><input matInput [(ngModel)]="q" (keyup.enter)="load()"></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Recherche</mat-label><mat-icon matPrefix>search</mat-icon><input matInput [(ngModel)]="q" (keyup.enter)="load()"></mat-form-field>
         <button mat-stroked-button (click)="load()">Rechercher</button>
       </div>
       <div class="table-card">
@@ -125,7 +174,7 @@ export class UserFormDialogComponent {
           <ng-container matColumnDef="nom"><th mat-header-cell *matHeaderCellDef>Nom</th><td mat-cell *matCellDef="let r">{{ r.prenom }} {{ r.nom }}</td></ng-container>
           <ng-container matColumnDef="email"><th mat-header-cell *matHeaderCellDef>E-mail</th><td mat-cell *matCellDef="let r">{{ r.email }}</td></ng-container>
           <ng-container matColumnDef="atelier"><th mat-header-cell *matHeaderCellDef>Compte</th><td mat-cell *matCellDef="let r">{{ r.atelierNom || '—' }}</td></ng-container>
-          <ng-container matColumnDef="roles"><th mat-header-cell *matHeaderCellDef>Rôles</th><td mat-cell *matCellDef="let r">{{ (r.roles || []).join(', ') }}</td></ng-container>
+          <ng-container matColumnDef="roles"><th mat-header-cell *matHeaderCellDef>Rôles</th><td mat-cell *matCellDef="let r">{{ roleLabels(r.roles) }}</td></ng-container>
           <ng-container matColumnDef="plan"><th mat-header-cell *matHeaderCellDef>Abonnement</th><td mat-cell *matCellDef="let r">{{ planLabel(r.plan) }}</td></ng-container>
           <ng-container matColumnDef="actif"><th mat-header-cell *matHeaderCellDef>Actif</th><td mat-cell *matCellDef="let r">{{ r.actif ? 'Oui' : 'Non' }}</td></ng-container>
           <ng-container matColumnDef="actions"><th mat-header-cell *matHeaderCellDef></th>
@@ -143,15 +192,20 @@ export class UtilisateursComponent {
   private readonly api = inject(ApiService);
   private readonly notify = inject(NotifyService);
   private readonly dialog = inject(MatDialog);
-  private readonly auth = inject(AuthService);
+  readonly auth = inject(AuthService);
   q = '';
+  labels = ROLE_LABELS;
   page = 0;
   size = 20;
   total = 0;
   rows: AppUser[] = [];
-  cols = this.auth.hasAnyRole(['SUPER_ADMIN'])
+  cols = this.auth.isPlatformTeam()
     ? ['nom', 'email', 'atelier', 'roles', 'plan', 'actif', 'actions']
     : ['nom', 'email', 'roles', 'actif', 'actions'];
+
+  roleLabels(roles?: string[] | null): string {
+    return (roles ?? []).map((role) => this.labels[role] || role).join(', ');
+  }
 
   planLabel(code?: string | null): string {
     return ({
@@ -164,7 +218,7 @@ export class UtilisateursComponent {
   }
 
   constructor() {
-    this.load();
+    bindAtelierScope(() => this.load());
   }
 
   load(): void {

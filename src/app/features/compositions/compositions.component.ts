@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { FormArray, FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
@@ -10,18 +11,33 @@ import { requireValid } from '../../core/forms';
 import { Composition, CostBreakdown, Modele, PageResponse } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
 import { money } from '../../core/format';
+import { bindAtelierScope } from '../../core/platform-scope.service';
+import { matchesSearch } from '../../core/search';
 
 @Component({
   selector: 'app-compositions',
   standalone: true,
-  imports: [FormsModule, ReactiveFormsModule, MatTableModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [FormsModule, ReactiveFormsModule, MatTableModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatIconModule],
   template: `
     <section class="page">
-      <header class="page-header"><h1>Compositions</h1></header>
+      <header class="page-header">
+        <div class="page-heading">
+          <span class="page-icon"><mat-icon>layers</mat-icon></span>
+          <div>
+            <h1>Compositions</h1>
+            <p class="muted">Nomenclatures et coûts par modèle</p>
+          </div>
+        </div>
+      </header>
       <div class="filters">
+        <mat-form-field appearance="outline">
+          <mat-label>Recherche modèle</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput [(ngModel)]="q" placeholder="Nom du modèle">
+        </mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Modèle</mat-label>
           <mat-select [(ngModel)]="modeleId" (selectionChange)="loadList()">
-            @for (m of modeles; track m.id) { <mat-option [value]="m.id">{{ m.nom }}</mat-option> }
+            @for (m of filteredModeles(); track m.id) { <mat-option [value]="m.id">{{ m.nom }}</mat-option> }
           </mat-select>
         </mat-form-field>
         <button mat-stroked-button (click)="nouvelle()">Nouvelle version</button>
@@ -81,6 +97,7 @@ export class CompositionsComponent {
   private readonly api = inject(ApiService);
   private readonly notify = inject(NotifyService);
   private readonly fb = inject(FormBuilder);
+  q = '';
   modeleId: number | null = null;
   modeles: Modele[] = [];
   versions: Composition[] = [];
@@ -97,7 +114,24 @@ export class CompositionsComponent {
   }
 
   constructor() {
-    this.api.get<PageResponse<Modele>>('modeles', { size: 200 }).subscribe({ next: (p) => (this.modeles = p.content ?? []) });
+    bindAtelierScope(() => this.loadModeles());
+  }
+
+  filteredModeles(): Modele[] {
+    return this.modeles.filter((modele) => matchesSearch(this.q, modele.nom, modele.categorieNom));
+  }
+
+  loadModeles(): void {
+    this.api.get<PageResponse<Modele>>('modeles', { size: 200, q: this.q }).subscribe({
+      next: (p) => {
+        this.modeles = p.content ?? [];
+        if (this.modeleId && !this.modeles.some((modele) => modele.id === this.modeleId)) {
+          this.modeleId = null;
+          this.versions = [];
+          this.current = null;
+        }
+      }
+    });
   }
 
   lineGroup(line?: { typeLigne?: string; designation?: string; quantite?: number; coutUnitaire?: number }) {

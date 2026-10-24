@@ -59,8 +59,12 @@ export class AuthService {
     return this.hasAnyRole(['SUPER_ADMIN']);
   }
 
+  isPlatformTeam(): boolean {
+    return this.hasAnyRole(['SUPER_ADMIN', 'ADMIN']);
+  }
+
   homeAfterLogin(): string {
-    if (this.isSuperAdmin()) {
+    if (this.isPlatformTeam()) {
       return '/app/plateforme';
     }
     if (this.isStaff()) {

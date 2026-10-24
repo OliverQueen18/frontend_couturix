@@ -4,25 +4,41 @@ import { FormArray, FormBuilder, FormsModule, ReactiveFormsModule, Validators } 
 import { debounceTime } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { ApiService } from '../../core/api.service';
 import { Client, Composition, Modele, PageResponse, ProfitResult, Simulation } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
 import { money } from '../../core/format';
+import { bindAtelierScope } from '../../core/platform-scope.service';
+import { matchesSearch } from '../../core/search';
 
 @Component({
   selector: 'app-simulateur',
   standalone: true,
-  imports: [FormsModule, ReactiveFormsModule, DecimalPipe, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [FormsModule, ReactiveFormsModule, DecimalPipe, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatIconModule],
   template: `
     <section class="page">
-      <header class="page-header"><h1>Simulateur de coûts</h1></header>
+      <header class="page-header">
+        <div class="page-heading">
+          <span class="page-icon"><mat-icon>calculate</mat-icon></span>
+          <div>
+            <h1>Simulateur de coûts</h1>
+            <p class="muted">Prix de revient, marge et transformation en devis</p>
+          </div>
+        </div>
+      </header>
       <form class="card-block" [formGroup]="form">
         <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Recherche modèle</mat-label>
+            <mat-icon matPrefix>search</mat-icon>
+            <input matInput [(ngModel)]="q" [ngModelOptions]="{standalone: true}" placeholder="Filtrer les modèles">
+          </mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Modèle</mat-label>
             <mat-select formControlName="modeleId" (selectionChange)="onModele()">
-              @for (m of modeles; track m.id) { <mat-option [value]="m.id">{{ m.nom }}</mat-option> }
+              @for (m of filteredModeles(); track m.id) { <mat-option [value]="m.id">{{ m.nom }}</mat-option> }
             </mat-select>
           </mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Composition</mat-label>
@@ -83,6 +99,7 @@ export class SimulateurComponent {
   private readonly api = inject(ApiService);
   private readonly notify = inject(NotifyService);
   private readonly fb = inject(FormBuilder);
+  q = '';
   modeles: Modele[] = [];
   compositions: Composition[] = [];
   clients: Client[] = [];
@@ -105,9 +122,15 @@ export class SimulateurComponent {
   }
 
   constructor() {
-    this.api.get<PageResponse<Modele>>('modeles', { size: 200 }).subscribe({ next: (p) => (this.modeles = p.content ?? []) });
-    this.api.get<PageResponse<Client>>('clients', { size: 200 }).subscribe({ next: (p) => (this.clients = p.content ?? []) });
+    bindAtelierScope(() => {
+      this.api.get<PageResponse<Modele>>('modeles', { size: 200 }).subscribe({ next: (p) => (this.modeles = p.content ?? []) });
+      this.api.get<PageResponse<Client>>('clients', { size: 200 }).subscribe({ next: (p) => (this.clients = p.content ?? []) });
+    });
     this.form.valueChanges.pipe(debounceTime(250)).subscribe(() => this.calculer());
+  }
+
+  filteredModeles(): Modele[] {
+    return this.modeles.filter((modele) => matchesSearch(this.q, modele.nom, modele.categorieNom));
   }
 
   lineGroup(line?: { typeLigne?: string; designation?: string; quantite?: number; coutUnitaire?: number }) {

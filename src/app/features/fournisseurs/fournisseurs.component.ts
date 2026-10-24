@@ -12,6 +12,7 @@ import { ApiService } from '../../core/api.service';
 import { requireValid } from '../../core/forms';
 import { Fournisseur, PageResponse } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
+import { bindAtelierScope } from '../../core/platform-scope.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 import { PhoneFieldComponent } from '../../shared/phone-field.component';
 
@@ -77,15 +78,21 @@ export class FournisseurFormDialogComponent {
 @Component({
   selector: 'app-fournisseurs',
   standalone: true,
-  imports: [FormsModule, MatTableModule, MatPaginatorModule, MatButtonModule, MatFormFieldModule, MatInputModule],
+  imports: [FormsModule, MatTableModule, MatPaginatorModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatIconModule],
   template: `
     <section class="page">
       <header class="page-header">
-        <h1>Fournisseurs</h1>
+        <div class="page-heading">
+          <span class="page-icon"><mat-icon>local_shipping</mat-icon></span>
+          <div>
+            <h1>Fournisseurs</h1>
+            <p class="muted">Partenaires d’achat de la maison</p>
+          </div>
+        </div>
         <button mat-flat-button color="primary" (click)="edit()">Nouveau</button>
       </header>
       <div class="filters">
-        <mat-form-field appearance="outline"><mat-label>Recherche</mat-label><input matInput [(ngModel)]="q" (keyup.enter)="load()"></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Recherche</mat-label><mat-icon matPrefix>search</mat-icon><input matInput [(ngModel)]="q" (keyup.enter)="load()"></mat-form-field>
         <button mat-stroked-button (click)="load()">Rechercher</button>
       </div>
       <div class="table-card">
@@ -120,7 +127,7 @@ export class FournisseursComponent {
   cols = ['nom', 'telephone', 'email', 'actif', 'actions'];
 
   constructor() {
-    this.load();
+    bindAtelierScope(() => this.load());
   }
 
   load(): void {

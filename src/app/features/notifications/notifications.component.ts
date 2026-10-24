@@ -1,8 +1,9 @@
 import { DatePipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
@@ -12,12 +13,15 @@ import { RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { AbonnementCourant, NotificationItem, NotificationTemplate, PageResponse, STATUT_LABELS } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
+import { bindAtelierScope } from '../../core/platform-scope.service';
+import { matchesSearch } from '../../core/search';
 import { PhoneFieldComponent } from '../../shared/phone-field.component';
 
 @Component({
   selector: 'app-notifications',
   standalone: true,
   imports: [
+    FormsModule,
     ReactiveFormsModule,
     DatePipe,
     RouterLink,
@@ -28,11 +32,20 @@ import { PhoneFieldComponent } from '../../shared/phone-field.component';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatIconModule,
     PhoneFieldComponent
   ],
   template: `
     <section class="page">
-      <header class="page-header"><h1>Notifications</h1></header>
+      <header class="page-header">
+        <div class="page-heading">
+          <span class="page-icon"><mat-icon>notifications</mat-icon></span>
+          <div>
+            <h1>Notifications</h1>
+            <p class="muted">Messages clients, rappels et modèles d’envoi</p>
+          </div>
+        </div>
+      </header>
       @if (quota) {
         <p class="muted">
           @if (quota.sms) {
@@ -48,6 +61,13 @@ import { PhoneFieldComponent } from '../../shared/phone-field.component';
       }
       <mat-tab-group>
         <mat-tab label="Historique">
+          <div class="filters" style="margin-top:1rem">
+            <mat-form-field appearance="outline">
+              <mat-label>Recherche</mat-label>
+              <mat-icon matPrefix>search</mat-icon>
+              <input matInput [(ngModel)]="q" (ngModelChange)="apply()" placeholder="Destinataire, événement, canal">
+            </mat-form-field>
+          </div>
           <div class="table-card" style="margin-top:1rem">
             <table mat-table [dataSource]="rows">
               <ng-container matColumnDef="date"><th mat-header-cell *matHeaderCellDef>Date</th><td mat-cell *matCellDef="let r">{{ r.createdAt | date:'dd/MM/yyyy HH:mm' }}</td></ng-container>
@@ -105,6 +125,8 @@ export class NotificationsComponent {
   private readonly api = inject(ApiService);
   private readonly notify = inject(NotifyService);
   private readonly fb = inject(FormBuilder);
+  q = '';
+  all: NotificationItem[] = [];
   rows: NotificationItem[] = [];
   templates: NotificationTemplate[] = [];
   forms: Record<number, ReturnType<FormBuilder['group']>> = {};
@@ -125,7 +147,7 @@ export class NotificationsComponent {
     this.rappel.controls.canal.valueChanges.subscribe(() => {
       this.rappel.controls.destinataire.setValue('');
     });
-    this.load();
+    bindAtelierScope(() => this.load());
     this.api.get<AbonnementCourant>('abonnements/courant').subscribe({
       next: (quota) => (this.quota = quota),
       error: () => undefined
@@ -146,20 +168,29 @@ export class NotificationsComponent {
   }
 
   load(): void {
-    this.api.get<NotificationItem[] | PageResponse<NotificationItem>>('notifications', { page: this.page, size: this.size }).subscribe({
+    this.page = 0;
+    this.api.get<NotificationItem[] | PageResponse<NotificationItem>>('notifications', { page: 0, size: 200 }).subscribe({
       next: (res) => {
-        const page = this.api.asPage(res, this.page, this.size);
-        this.rows = page.content ?? [];
-        this.total = page.totalElements ?? 0;
+        const page = this.api.asPage(res, 0, 200);
+        this.all = page.content ?? [];
+        this.apply();
       },
       error: (err) => this.notify.error(err)
     });
   }
 
+  apply(): void {
+    const filtered = this.all.filter((row) =>
+      matchesSearch(this.q, row.destinataire, row.evenement, this.canalLabel(row.canal), row.canal, this.labels[row.statut], row.sujet)
+    );
+    this.total = filtered.length;
+    this.rows = filtered.slice(this.page * this.size, this.page * this.size + this.size);
+  }
+
   onPage(e: PageEvent): void {
     this.page = e.pageIndex;
     this.size = e.pageSize;
-    this.load();
+    this.apply();
   }
 
   sendRappel(): void {

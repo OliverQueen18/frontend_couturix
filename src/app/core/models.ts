@@ -451,10 +451,23 @@ export interface SitePage {
   updatedAt?: string | null;
 }
 
+export interface SiteSlide {
+  id: number;
+  kicker?: string | null;
+  title: string;
+  body?: string | null;
+  imageUrl: string;
+  ctaLabel?: string | null;
+  ctaPath?: string | null;
+  sortOrder: number;
+  visible: boolean;
+}
+
 export interface SiteSnapshot {
   settings: SiteSettings;
   menus: SiteMenu[];
   pages: SitePage[];
+  slides: SiteSlide[];
 }
 
 export interface PlatformOverview {
@@ -463,6 +476,7 @@ export interface PlatformOverview {
   comptesClients: number;
   pages: number;
   menus: number;
+  slides: number;
 }
 
 export interface AbonnementCourant {
@@ -600,8 +614,8 @@ export const STATUT_LABELS: Record<string, string> = {
 
 export const ROLE_LABELS: Record<string, string> = {
   SUPER_ADMIN: 'Super administrateur',
-  ADMIN: 'Administrateur',
-  GERANT: 'Gérant',
+  ADMIN: 'Administrateur CouturiX',
+  GERANT: 'Administrateur d’atelier',
   CAISSIER: 'Caissier',
   RECEPTIONNISTE: 'Réceptionniste',
   TAILLEUR: 'Tailleur',

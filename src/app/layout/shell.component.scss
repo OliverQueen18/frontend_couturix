@@ -108,6 +108,15 @@
   flex: 1;
 }
 
+.scope-field {
+  width: min(240px, 42vw);
+  margin: 0;
+}
+
+.scope-field .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+
 .atelier-chip {
   display: inline-flex;
   align-items: center;

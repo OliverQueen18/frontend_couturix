@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { ApiService } from '../../core/api.service';
@@ -11,10 +12,18 @@ import { periodRange } from '../../core/format';
 @Component({
   selector: 'app-rapports',
   standalone: true,
-  imports: [ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatIconModule],
   template: `
     <section class="page">
-      <header class="page-header"><h1>Rapports</h1></header>
+      <header class="page-header">
+        <div class="page-heading">
+          <span class="page-icon"><mat-icon>assessment</mat-icon></span>
+          <div>
+            <h1>Rapports</h1>
+            <p class="muted">Exports ventes, commandes, stocks, caisse, paie et clients</p>
+          </div>
+        </div>
+      </header>
       <form class="card-block dialog-form" [formGroup]="form">
         <div class="form-grid">
           <mat-form-field appearance="outline"><mat-label>Type</mat-label>

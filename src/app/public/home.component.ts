@@ -1,13 +1,15 @@
-import { Component, OnDestroy, inject } from '@angular/core';
+import { Component, OnDestroy, effect, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { ApiService } from '../core/api.service';
-import { AtelierPublic, PlanOffre } from '../core/models';
+import { AtelierPublic, PlanOffre, SiteSlide } from '../core/models';
+import { SiteContentService } from '../core/site-content.service';
 import {
   fcfa,
   HOME_ADS,
   HOME_BANNERS,
+  HomeBanner,
   HOME_CITIES,
   HOME_PLANS,
   HOME_PUBLICATIONS,
@@ -31,8 +33,9 @@ export class HomeComponent implements OnDestroy {
   private readonly api = inject(ApiService);
   private readonly router = inject(Router);
   private readonly planDialog = inject(PlanDetailDialogService);
+  private readonly site = inject(SiteContentService);
 
-  readonly banners = HOME_BANNERS;
+  banners: HomeBanner[] = HOME_BANNERS;
   readonly stats = HOME_STATS;
   slideIndex = 0;
   private slideTimer: ReturnType<typeof setInterval> | null = null;
@@ -52,6 +55,12 @@ export class HomeComponent implements OnDestroy {
   yearly = false;
 
   constructor() {
+    effect(() => {
+      this.banners = this.toBanners(this.site.slides());
+      if (this.slideIndex >= this.banners.length) {
+        this.slideIndex = 0;
+      }
+    });
     this.load();
     this.startSlides();
   }
@@ -161,6 +170,20 @@ export class HomeComponent implements OnDestroy {
     return parts.join(', ') || 'Mali';
   }
 
+  cta(slide: HomeBanner): { link: string; fragment?: string; href?: string } {
+    return this.site.parts(slide.link);
+  }
+
+  slideSrc(url: string): string {
+    if (!url) {
+      return 'images/home/fallback.svg';
+    }
+    if (url.startsWith('http') || url.startsWith('images/')) {
+      return url;
+    }
+    return this.api.fileUrl(url);
+  }
+
   imgFallback(event: Event): void {
     const img = event.target as HTMLImageElement;
     if (img.dataset['fallback'] === '1') {
@@ -168,6 +191,21 @@ export class HomeComponent implements OnDestroy {
     }
     img.dataset['fallback'] = '1';
     img.src = 'images/home/fallback.svg';
+  }
+
+  private toBanners(slides: SiteSlide[]): HomeBanner[] {
+    if (!slides.length) {
+      return HOME_BANNERS;
+    }
+    return slides.map((slide) => ({
+      id: slide.id,
+      kicker: slide.kicker ?? '',
+      title: slide.title,
+      text: slide.body ?? '',
+      image: this.slideSrc(slide.imageUrl),
+      cta: slide.ctaLabel || 'Découvrir',
+      link: slide.ctaPath || '/inscription'
+    }));
   }
 
   private toWorkshop(atelier: AtelierPublic, index: number): HomeWorkshop {
