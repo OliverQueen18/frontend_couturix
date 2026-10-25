@@ -1,3 +1,7 @@
+import { PlanOffre, PlanServiceGroup } from '../core/models';
+
+export type { PlanServiceGroup };
+
 export interface HomeStat {
   value: string;
   label: string;
@@ -26,11 +30,6 @@ export interface HomePublication {
   likes: number;
 }
 
-export interface PlanServiceGroup {
-  title: string;
-  items: string[];
-}
-
 export interface HomePlan {
   code: string;
   name: string;
@@ -43,6 +42,7 @@ export interface HomePlan {
   limit: string;
   popular?: boolean;
   cta: string;
+  remiseAnnuelle?: number;
 }
 
 export interface HomeAd {
@@ -62,6 +62,7 @@ export interface HomeBanner {
   image: string;
   cta: string;
   link: string;
+  showText?: boolean;
 }
 
 export const HOME_BANNERS: HomeBanner[] = [
@@ -437,4 +438,53 @@ export const HOME_ADS: HomeAd[] = [
 
 export function fcfa(amount: number): string {
   return `${new Intl.NumberFormat('fr-FR').format(amount)} FCFA`;
+}
+
+const PLAN_TONES: Record<string, HomePlan['tone']> = {
+  GRATUIT: 'free',
+  STANDARD: 'standard',
+  PREMIUM: 'premium',
+  GOLD: 'gold'
+};
+
+export function yearlyFactor(remiseAnnuelle?: number | null): number {
+  const remise = Number.isFinite(remiseAnnuelle) ? Math.min(80, Math.max(0, Number(remiseAnnuelle))) : 20;
+  return (100 - remise) / 100;
+}
+
+export function atelierLimitLabel(maxAteliers: number | null | undefined): string {
+  if (maxAteliers == null) {
+    return 'Ateliers illimités';
+  }
+  if (maxAteliers <= 1) {
+    return '1 atelier';
+  }
+  return `Jusqu’à ${maxAteliers} ateliers`;
+}
+
+export function toHomePlan(dto: PlanOffre, fallback?: HomePlan): HomePlan {
+  const base = fallback ?? HOME_PLANS.find((plan) => plan.code === dto.code);
+  const features = dto.features?.length ? dto.features : (base?.features ?? []);
+  const services = dto.services?.length ? dto.services : (base?.services ?? []);
+  return {
+    code: dto.code,
+    name: dto.libelle || base?.name || dto.code,
+    priceMonthly: dto.prixMensuel ?? base?.priceMonthly ?? 0,
+    description: dto.description || base?.description || '',
+    features: [...features],
+    services: services.map((group) => ({ title: group.title, items: [...(group.items ?? [])] })),
+    tone: PLAN_TONES[dto.code] ?? base?.tone ?? 'standard',
+    kicker: dto.kicker || base?.kicker || '',
+    limit: atelierLimitLabel(dto.maxAteliers) || base?.limit || '',
+    popular: dto.popular ?? base?.popular,
+    cta: dto.cta || base?.cta || 'Choisir',
+    remiseAnnuelle: dto.remiseAnnuelle ?? base?.remiseAnnuelle ?? 20
+  };
+}
+
+export function mapPublicOffres(offres: PlanOffre[] | null | undefined): HomePlan[] {
+  if (!offres?.length) {
+    return HOME_PLANS.map((plan) => ({ ...plan, features: [...plan.features] }));
+  }
+  return offres.map((dto) => toHomePlan(dto));
 }

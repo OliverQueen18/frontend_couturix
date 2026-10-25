@@ -451,6 +451,15 @@ export interface SitePage {
   updatedAt?: string | null;
 }
 
+export interface SiteMedia {
+  id: number;
+  originalName: string;
+  url: string;
+  mime?: string | null;
+  sizeBytes: number;
+  createdAt?: string | null;
+}
+
 export interface SiteSlide {
   id: number;
   kicker?: string | null;
@@ -461,6 +470,7 @@ export interface SiteSlide {
   ctaPath?: string | null;
   sortOrder: number;
   visible: boolean;
+  showText: boolean;
 }
 
 export interface SiteSnapshot {
@@ -494,12 +504,26 @@ export interface AbonnementCourant {
   essaiFin?: string | null;
 }
 
+export interface PlanServiceGroup {
+  title: string;
+  items: string[];
+}
+
 export interface PlanOffre {
   code: string;
   libelle: string;
+  kicker?: string | null;
+  description?: string | null;
+  cta?: string | null;
   trialDays: number;
   maxAteliers: number | null;
   sms: boolean;
+  prixMensuel: number;
+  remiseAnnuelle: number;
+  popular: boolean;
+  actif: boolean;
+  features: string[];
+  services: PlanServiceGroup[];
 }
 
 export interface NotificationTemplate {

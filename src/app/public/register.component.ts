@@ -9,13 +9,13 @@ import { MatSelectModule } from '@angular/material/select';
 import { catchError, debounceTime, distinctUntilChanged, filter, of, switchMap } from 'rxjs';
 import { ApiService } from '../core/api.service';
 import { AuthService } from '../core/auth.service';
-import { GeoPoint } from '../core/models';
+import { GeoPoint, PlanOffre } from '../core/models';
 import { NotifyService } from '../core/notify.service';
 import { BAMAKO, DEFAULT_COUNTRY, countryOptions, mapZoomFor } from '../shared/countries';
 import { PasswordToggleComponent } from '../shared/password-toggle.component';
 import { PhoneFieldComponent } from '../shared/phone-field.component';
 import { StreetMapComponent } from '../shared/street-map.component';
-import { fcfa, HOME_PLANS } from './home.data';
+import { fcfa, HOME_PLANS, HomePlan, mapPublicOffres } from './home.data';
 import { PlanDetailDialogService } from './plan-detail-dialog.component';
 import { PublicNavComponent } from './public-nav.component';
 import { RegisterClientDialogService } from './register-client.component';
@@ -53,12 +53,8 @@ export class RegisterComponent {
   loading = false;
   mapZoom = 13;
   readonly countryOptions = countryOptions;
-  readonly offers = [
-    { code: 'GRATUIT', name: 'Gratuit', price: fcfa(0), limit: '1 atelier', tone: 'free', kicker: '15 jours d’essai' },
-    { code: 'STANDARD', name: 'Standard', price: fcfa(15000), limit: '1 atelier', tone: 'standard', kicker: 'Présence' },
-    { code: 'PREMIUM', name: 'Premium', price: fcfa(35000), limit: 'Jusqu’à 5 ateliers', tone: 'premium', kicker: 'Le plus choisi' },
-    { code: 'GOLD', name: 'Gold', price: fcfa(60000), limit: 'Ateliers illimités', tone: 'gold', kicker: 'Maison' }
-  ];
+  plans: HomePlan[] = HOME_PLANS.map((plan) => ({ ...plan, features: [...plan.features] }));
+  offers = this.toOffers(this.plans);
 
   readonly form = this.fb.nonNullable.group({
     plan: [this.readPlan(), Validators.required],
@@ -80,6 +76,10 @@ export class RegisterComponent {
   });
 
   constructor() {
+    this.api.get<PlanOffre[]>('public/offres').subscribe({
+      next: (offres) => this.applyPlans(mapPublicOffres(offres)),
+      error: () => undefined
+    });
     this.form.valueChanges.pipe(
       debounceTime(900),
       distinctUntilChanged((a, b) =>
@@ -115,7 +115,7 @@ export class RegisterComponent {
   showPlan(code: string, event: Event): void {
     event.stopPropagation();
     event.preventDefault();
-    const plan = HOME_PLANS.find((item) => item.code === code);
+    const plan = this.plans.find((item) => item.code === code);
     if (!plan) {
       return;
     }
@@ -128,6 +128,26 @@ export class RegisterComponent {
 
   get selectedOffer() {
     return this.offers.find((offer) => offer.code === this.form.controls.plan.value) ?? null;
+  }
+
+  private applyPlans(plans: HomePlan[]): void {
+    this.plans = plans;
+    this.offers = this.toOffers(plans);
+    const selected = this.form.controls.plan.value;
+    if (selected && !this.offers.some((offer) => offer.code === selected)) {
+      this.form.controls.plan.setValue('');
+    }
+  }
+
+  private toOffers(plans: HomePlan[]) {
+    return plans.map((plan) => ({
+      code: plan.code,
+      name: plan.name,
+      price: fcfa(plan.priceMonthly),
+      limit: plan.limit,
+      tone: plan.tone,
+      kicker: plan.kicker
+    }));
   }
 
   openClient(): void {

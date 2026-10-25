@@ -36,22 +36,26 @@
         @for (slide of banners; track slide.id; let i = $index) {
           <article class="slide" [class.on]="i === slideIndex" [attr.aria-hidden]="i !== slideIndex">
             <img [src]="slide.image" [alt]="slide.title" (error)="imgFallback($event)">
-            <div class="slide-copy">
-              @if (slide.kicker) {
-                <p>{{ slide.kicker }}</p>
-              }
-              <h2>{{ slide.title }}</h2>
-              @if (slide.text) {
-                <p>{{ slide.text }}</p>
-              }
-              @if (slide.cta) {
-                @if (cta(slide).href) {
-                  <a class="btn btn-pink" [href]="cta(slide).href" target="_blank" rel="noopener">{{ slide.cta }}</a>
-                } @else {
-                  <a class="btn btn-pink" [routerLink]="cta(slide).link" [fragment]="cta(slide).fragment">{{ slide.cta }}</a>
+            @if (hasSlideCopy(slide)) {
+              <div class="slide-copy">
+                @if (slide.kicker) {
+                  <p>{{ slide.kicker }}</p>
                 }
-              }
-            </div>
+                @if (slide.title) {
+                  <h2>{{ slide.title }}</h2>
+                }
+                @if (slide.text) {
+                  <p>{{ slide.text }}</p>
+                }
+                @if (slide.cta) {
+                  @if (cta(slide).href) {
+                    <a class="btn btn-pink" [href]="cta(slide).href" target="_blank" rel="noopener">{{ slide.cta }}</a>
+                  } @else {
+                    <a class="btn btn-pink" [routerLink]="cta(slide).link" [fragment]="cta(slide).fragment">{{ slide.cta }}</a>
+                  }
+                }
+              </div>
+            }
           </article>
         }
         <button type="button" class="slide-nav prev" (click)="step(-1)" aria-label="Bannière précédente">
@@ -213,16 +217,16 @@
       <div class="billing">
         <button type="button" [class.on]="!yearly" (click)="yearly = false">Mensuel</button>
         <button type="button" [class.on]="yearly" (click)="yearly = true">Annuel</button>
-        <span>-20%</span>
+        <span>{{ yearlyLabel() }}</span>
       </div>
       <div class="plans">
         @for (plan of plans; track plan.code) {
           <article [class.popular]="plan.popular" (click)="openPlan(plan)">
             @if (plan.popular) { <p class="pop">Le plus populaire</p> }
             <h3>{{ plan.name }}</h3>
-            <p class="price">{{ planPrice(plan.priceMonthly) }} <small>/ mois</small></p>
+            <p class="price">{{ planPrice(plan) }} <small>/ mois</small></p>
             @if (yearly && plan.priceMonthly) {
-              <p class="year-note">Facturé à l’année, soit {{ planPrice(plan.priceMonthly * 12) }} / an</p>
+              <p class="year-note">Facturé à l’année, soit {{ yearTotal(plan) }} / an</p>
             }
             <p class="sub">{{ plan.description }}</p>
             <ul>

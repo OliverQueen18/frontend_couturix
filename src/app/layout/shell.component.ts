@@ -68,7 +68,7 @@ export class ShellComponent {
         { label: 'Ateliers', icon: 'storefront', path: '/app/ateliers' },
         { label: 'Comptes clients', icon: 'person', path: '/app/comptes-clients' },
         { label: 'Utilisateurs', icon: 'manage_accounts', path: '/app/utilisateurs' },
-        { label: 'Offres', icon: 'workspace_premium', path: '/app/offres', roles: ['SUPER_ADMIN'] }
+        { label: 'Offres', icon: 'workspace_premium', path: '/app/offres', roles: ['SUPER_ADMIN', 'ADMIN'] }
       ]
     },
     {

@@ -15,7 +15,10 @@ import {
   HOME_PUBLICATIONS,
   HOME_STATS,
   HOME_WORKSHOPS,
-  HomeWorkshop
+  HomePlan,
+  HomeWorkshop,
+  mapPublicOffres,
+  yearlyFactor
 } from './home.data';
 import { PublicFooterComponent } from './public-footer.component';
 import { PublicNavComponent } from './public-nav.component';
@@ -105,24 +108,7 @@ export class HomeComponent implements OnDestroy {
   load(): void {
     this.api.get<PlanOffre[]>('public/offres').subscribe({
       next: (offres) => {
-        const gratuit = offres.find((row) => row.code === 'GRATUIT');
-        if (!gratuit || gratuit.trialDays <= 0) {
-          return;
-        }
-        const label = `${gratuit.trialDays} jours d’essai`;
-        this.plans = this.plans.map((plan) => {
-          if (plan.code !== 'GRATUIT') {
-            return plan;
-          }
-          return {
-            ...plan,
-            kicker: label,
-            description: `Pour ouvrir votre maison et être visible, sans frais, avec ${gratuit.trialDays} jours d’essai des fonctionnalités.`,
-            features: plan.features.map((item) =>
-              item.includes('essai des fonctionnalités') ? `${gratuit.trialDays} jours d’essai des fonctionnalités` : item
-            )
-          };
-        });
+        this.plans = mapPublicOffres(offres);
       },
       error: () => undefined
     });
@@ -143,9 +129,18 @@ export class HomeComponent implements OnDestroy {
     void this.router.navigate(['/ateliers'], { queryParams: q ? { q } : {} });
   }
 
-  planPrice(monthly: number): string {
-    const amount = this.yearly ? Math.round(monthly * 0.8) : monthly;
+  yearlyLabel(): string {
+    const remises = this.plans.map((plan) => plan.remiseAnnuelle ?? 20).filter((value) => value > 0);
+    return `-${remises.length ? Math.max(...remises) : 20}%`;
+  }
+
+  planPrice(plan: HomePlan): string {
+    const amount = this.yearly ? Math.round(plan.priceMonthly * yearlyFactor(plan.remiseAnnuelle)) : plan.priceMonthly;
     return fcfa(amount);
+  }
+
+  yearTotal(plan: HomePlan): string {
+    return fcfa(Math.round(plan.priceMonthly * yearlyFactor(plan.remiseAnnuelle)) * 12);
   }
 
   openPlan(plan: (typeof this.plans)[number]): void {
@@ -154,6 +149,10 @@ export class HomeComponent implements OnDestroy {
         void this.router.navigate(['/inscription'], { queryParams: { plan: code } });
       }
     });
+  }
+
+  hasSlideCopy(slide: HomeBanner): boolean {
+    return slide.showText !== false && !!(slide.kicker || slide.title || slide.text || slide.cta);
   }
 
   workshopLink(workshop: HomeWorkshop): string[] {
@@ -203,8 +202,9 @@ export class HomeComponent implements OnDestroy {
       title: slide.title,
       text: slide.body ?? '',
       image: this.slideSrc(slide.imageUrl),
-      cta: slide.ctaLabel || 'Découvrir',
-      link: slide.ctaPath || '/inscription'
+      cta: slide.ctaLabel?.trim() || '',
+      link: slide.ctaPath || '/inscription',
+      showText: slide.showText !== false
     }));
   }
 

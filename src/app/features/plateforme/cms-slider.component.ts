@@ -13,6 +13,7 @@ import { SiteSlide } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
 import { SiteContentService } from '../../core/site-content.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
+import { MediaLibraryDialogService } from './media-library-dialog.component';
 
 @Component({
   selector: 'app-cms-slider',
@@ -50,6 +51,10 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
               <th mat-header-cell *matHeaderCellDef>Ordre</th>
               <td mat-cell *matCellDef="let r">{{ r.sortOrder }}</td>
             </ng-container>
+            <ng-container matColumnDef="texts">
+              <th mat-header-cell *matHeaderCellDef>Textes</th>
+              <td mat-cell *matCellDef="let r">{{ r.showText !== false ? 'Affichés' : 'Masqués' }}</td>
+            </ng-container>
             <ng-container matColumnDef="visible">
               <th mat-header-cell *matHeaderCellDef>Visible</th>
               <td mat-cell *matCellDef="let r">{{ r.visible ? 'Oui' : 'Non' }}</td>
@@ -67,19 +72,27 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
             @if (form.controls.imageUrl.value) {
               <img class="preview" [src]="preview(form.controls.imageUrl.value)" [alt]="form.controls.title.value">
             }
-            <label class="upload">
+            <button mat-stroked-button type="button" class="pick-media" (click)="openLibrary()">
+              <mat-icon>photo_library</mat-icon>
               {{ form.controls.imageUrl.value ? 'Changer l’image' : 'Choisir une image' }}
-              <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onFile($event)">
-            </label>
-            <mat-form-field appearance="outline"><mat-label>Surligne</mat-label><input matInput formControlName="kicker"></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Titre</mat-label><input matInput formControlName="title"></mat-form-field>
-            <mat-form-field appearance="outline" class="full"><mat-label>Texte</mat-label>
-              <textarea matInput rows="3" formControlName="body"></textarea>
+            </button>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ form.controls.showText.value ? 'Titre' : 'Titre interne' }}</mat-label>
+              <input matInput formControlName="title">
             </mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Bouton</mat-label><input matInput formControlName="ctaLabel"></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Lien</mat-label><input matInput formControlName="ctaPath" placeholder="/inscription"></mat-form-field>
+            <div class="toggles">
+              <mat-slide-toggle formControlName="showText">Afficher les textes</mat-slide-toggle>
+              <mat-slide-toggle formControlName="visible">Visible sur l’accueil</mat-slide-toggle>
+            </div>
+            @if (form.controls.showText.value) {
+              <mat-form-field appearance="outline"><mat-label>Surligne</mat-label><input matInput formControlName="kicker"></mat-form-field>
+              <mat-form-field appearance="outline" class="full"><mat-label>Texte</mat-label>
+                <textarea matInput rows="3" formControlName="body"></textarea>
+              </mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Bouton</mat-label><input matInput formControlName="ctaLabel"></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Lien</mat-label><input matInput formControlName="ctaPath" placeholder="/inscription"></mat-form-field>
+            }
             <mat-form-field appearance="outline"><mat-label>Ordre</mat-label><input matInput type="number" formControlName="sortOrder"></mat-form-field>
-            <mat-slide-toggle formControlName="visible">Visible sur l’accueil</mat-slide-toggle>
             <div class="actions">
               <button mat-button type="button" (click)="editing = false">Annuler</button>
               @if (current?.id) {
@@ -97,9 +110,9 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
     .clickable { cursor: pointer; }
     .thumb { width: 72px; height: 44px; object-fit: cover; border-radius: 6px; background: #f3edf7; display: block; }
     .preview { width: 100%; max-height: 180px; object-fit: cover; border-radius: 10px; background: #260838; margin-bottom: .8rem; }
-    .upload { display: inline-flex; align-items: center; margin-bottom: 1rem; padding: .45rem .8rem; border-radius: 999px; background: #f7eef4; color: #2e1052; cursor: pointer; font-weight: 600; }
-    .upload input { display: none; }
+    .pick-media { margin-bottom: 1rem; }
     .empty { padding: 1rem; }
+    .toggles { display: grid; gap: .7rem; margin: .2rem 0 1rem; }
     .actions { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: flex-end; margin-top: .8rem; }
     @media (max-width: 960px) { .cms-layout { grid-template-columns: 1fr; } }
   `]
@@ -110,8 +123,9 @@ export class CmsSliderComponent {
   private readonly fb = inject(FormBuilder);
   private readonly site = inject(SiteContentService);
   private readonly dialog = inject(MatDialog);
+  private readonly library = inject(MediaLibraryDialogService);
   rows: SiteSlide[] = [];
-  cols = ['image', 'title', 'order', 'visible'];
+  cols = ['image', 'title', 'order', 'texts', 'visible'];
   editing = false;
   current: SiteSlide | null = null;
   readonly form = this.fb.nonNullable.group({
@@ -122,7 +136,8 @@ export class CmsSliderComponent {
     ctaLabel: [''],
     ctaPath: [''],
     sortOrder: [10],
-    visible: [true]
+    visible: [true],
+    showText: [true]
   });
 
   constructor() {
@@ -151,7 +166,7 @@ export class CmsSliderComponent {
     const next = (this.rows.at(-1)?.sortOrder ?? 0) + 10;
     this.form.reset({
       kicker: '', title: '', body: '', imageUrl: '', ctaLabel: '', ctaPath: '/inscription',
-      sortOrder: next, visible: true
+      sortOrder: next, visible: true, showText: true
     });
     this.editing = true;
   }
@@ -166,21 +181,17 @@ export class CmsSliderComponent {
       ctaLabel: row.ctaLabel ?? '',
       ctaPath: row.ctaPath ?? '',
       sortOrder: row.sortOrder,
-      visible: row.visible
+      visible: row.visible,
+      showText: row.showText !== false
     });
     this.editing = true;
   }
 
-  onFile(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    input.value = '';
-    if (!file) {
-      return;
-    }
-    this.api.upload<{ url: string }>('admin/site/slides/image', file).subscribe({
-      next: (res) => this.form.patchValue({ imageUrl: res.url }),
-      error: (err) => this.notify.error(err)
+  openLibrary(): void {
+    this.library.open(this.form.controls.imageUrl.value).afterClosed().subscribe((url) => {
+      if (url) {
+        this.form.patchValue({ imageUrl: url });
+      }
     });
   }
 

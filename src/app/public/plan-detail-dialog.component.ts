@@ -1,7 +1,7 @@
 import { Component, Injectable, inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { fcfa, HomePlan } from './home.data';
+import { fcfa, HomePlan, yearlyFactor } from './home.data';
 
 export interface PlanDetailData {
   plan: HomePlan;
@@ -21,12 +21,13 @@ export class PlanDetailDialogComponent {
   readonly plan = this.data.plan;
 
   price(): string {
-    const monthly = this.data.yearly ? Math.round(this.plan.priceMonthly * 0.8) : this.plan.priceMonthly;
+    const factor = yearlyFactor(this.plan.remiseAnnuelle);
+    const monthly = this.data.yearly ? Math.round(this.plan.priceMonthly * factor) : this.plan.priceMonthly;
     return fcfa(monthly);
   }
 
   yearTotal(): string {
-    return fcfa(Math.round(this.plan.priceMonthly * 0.8) * 12);
+    return fcfa(Math.round(this.plan.priceMonthly * yearlyFactor(this.plan.remiseAnnuelle)) * 12);
   }
 
   close(): void {

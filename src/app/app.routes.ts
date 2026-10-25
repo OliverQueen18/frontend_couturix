@@ -131,7 +131,7 @@ export const routes: Routes = [
       {
         path: 'offres',
         canActivate: [roleGuard],
-        data: { roles: ['SUPER_ADMIN'] },
+        data: { roles: ['SUPER_ADMIN', 'ADMIN'] },
         loadComponent: () =>
           import('./features/plateforme/cms-offres.component').then((m) => m.CmsOffresComponent)
       },

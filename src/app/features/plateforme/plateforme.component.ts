@@ -44,12 +44,14 @@ import { NotifyService } from '../../core/notify.service';
     </section>
   `,
   styles: [`
-    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; }
-    .section-title { margin: 1.4rem 0 .7rem; font-size: .82rem; letter-spacing: .12em; text-transform: uppercase; color: #6b5d76; }
-    .dash-card { display: grid; gap: .35rem; text-decoration: none; color: inherit; }
-    .dash-card mat-icon { color: #e21b70; }
-    .dash-card strong { font-size: 1.8rem; }
-    .dash-card span { color: #6b5d76; }
+    :host h1 { font-size: 1.35rem; }
+    :host .muted { font-size: .88rem; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: .75rem; }
+    .section-title { margin: 1.2rem 0 .55rem; font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: #6b5d76; }
+    .dash-card { display: grid; gap: .12rem; text-decoration: none; color: inherit; }
+    .dash-card mat-icon { width: 22px; height: 22px; font-size: 22px; color: #e21b70; }
+    .dash-card strong { font-size: 1.05rem; font-weight: 700; line-height: 1.2; }
+    .dash-card span { color: #6b5d76; font-size: .8rem; }
   `]
 })
 export class PlateformeComponent {
@@ -61,9 +63,9 @@ export class PlateformeComponent {
     { label: 'Ateliers', path: '/app/ateliers', icon: 'storefront', value: '—' },
     { label: 'Comptes clients', path: '/app/comptes-clients', icon: 'person', value: '—' },
     { label: 'Utilisateurs', path: '/app/utilisateurs', icon: 'manage_accounts', value: '—' },
+    { label: 'Offres', path: '/app/offres', icon: 'workspace_premium', value: 'Tarifs' },
     ...(this.cms
       ? [
-          { label: 'Offres', path: '/app/offres', icon: 'workspace_premium', value: 'Délais' },
           { label: 'Pages', path: '/app/site/pages', icon: 'article', value: '—' },
           { label: 'Menus', path: '/app/site/menus', icon: 'menu', value: '—' },
           { label: 'Slider', path: '/app/site/slider', icon: 'view_carousel', value: '—' },
@@ -100,7 +102,7 @@ export class PlateformeComponent {
           { label: 'Ateliers', path: '/app/ateliers', icon: 'storefront', value: String(res.ateliers) },
           { label: 'Comptes clients', path: '/app/comptes-clients', icon: 'person', value: String(res.comptesClients) },
           { label: 'Utilisateurs', path: '/app/utilisateurs', icon: 'manage_accounts', value: String(res.utilisateurs) },
-          { label: 'Offres', path: '/app/offres', icon: 'workspace_premium', value: 'Délais' },
+          { label: 'Offres', path: '/app/offres', icon: 'workspace_premium', value: 'Tarifs' },
           { label: 'Pages', path: '/app/site/pages', icon: 'article', value: String(res.pages) },
           { label: 'Menus', path: '/app/site/menus', icon: 'menu', value: String(res.menus) },
           { label: 'Slider', path: '/app/site/slider', icon: 'view_carousel', value: String(res.slides) },
