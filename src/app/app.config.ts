@@ -7,6 +7,7 @@ import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { authInterceptor } from './core/auth.interceptor';
+import { provideStaleChunkReload } from './core/stale-chunk';
 import { tenantScopeInterceptor } from './core/tenant-scope.interceptor';
 import { routes } from './app.routes';
 
@@ -17,6 +18,7 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes, withInMemoryScrolling({ anchorScrolling: 'enabled', scrollPositionRestoration: 'enabled' })),
     provideHttpClient(withInterceptors([authInterceptor, tenantScopeInterceptor])),
+    ...provideStaleChunkReload(),
     provideAnimationsAsync(),
     provideNativeDateAdapter(),
     { provide: LOCALE_ID, useValue: 'fr-FR' },

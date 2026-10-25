@@ -5,7 +5,8 @@
 # DNS : A/AAAA couturix.com et www.couturix.com → IP du VPS
 # Le Nginx du frontend reverse-proxie /api vers backend:8080 (alias réseau).
 # L’API n’est pas exposée sur internet.
-# nginx-proxy limite à 1 Mo par défaut : Jenkins pose data/vhost.d/couturix.com (32m).
+# nginx-proxy limite à 1 Mo par défaut : Jenkins pose data/vhost.d/couturix.com
+# et data/vhost.d/default (client_max_body_size 32m).
 
 services:
   postgres-couturix:

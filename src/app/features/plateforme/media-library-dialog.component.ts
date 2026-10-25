@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { ApiService } from '../../core/api.service';
+import { compressImage } from '../../core/compress-image';
 import { SiteMedia } from '../../core/models';
 import { NotifyService } from '../../core/notify.service';
 
@@ -32,10 +33,10 @@ export interface MediaLibraryData {
           <mat-icon matPrefix>search</mat-icon>
           <input matInput [(ngModel)]="q" placeholder="Rechercher un fichier" name="media-q">
         </mat-form-field>
-        <label class="upload">
-          <mat-icon>upload</mat-icon>
-          Téléverser
-          <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onFile($event)">
+        <label class="upload" [class.busy]="uploading">
+          <mat-icon>{{ uploading ? 'hourglass_top' : 'upload' }}</mat-icon>
+          {{ uploading ? 'Envoi…' : 'Téléverser' }}
+          <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onFile($event)" [disabled]="uploading">
         </label>
       </div>
       @if (loading) {
@@ -74,6 +75,7 @@ export interface MediaLibraryData {
     .toolbar { display: flex; gap: .7rem; align-items: center; margin-bottom: .9rem; }
     .search { flex: 1; }
     .upload { display: inline-flex; align-items: center; gap: .35rem; padding: .45rem .85rem; border-radius: 999px; background: #f7eef4; color: #2e1052; cursor: pointer; font-weight: 600; white-space: nowrap; }
+    .upload.busy { opacity: .65; pointer-events: none; }
     .upload input { display: none; }
     .upload mat-icon { width: 18px; height: 18px; font-size: 18px; }
     .empty { margin: 2rem 0; text-align: center; }
@@ -98,6 +100,7 @@ export class MediaLibraryDialogComponent {
   selected: SiteMedia | null = null;
   q = '';
   loading = true;
+  uploading = false;
 
   constructor() {
     this.load();
@@ -128,21 +131,32 @@ export class MediaLibraryDialogComponent {
     return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
   }
 
-  onFile(event: Event): void {
+  async onFile(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     input.value = '';
-    if (!file) {
+    if (!file || this.uploading) {
       return;
     }
-    this.api.upload<SiteMedia>('admin/site/media', file).subscribe({
-      next: (item) => {
-        this.items = [item, ...this.items.filter((row) => row.url !== item.url)];
-        this.selected = item;
-        this.notify.success('Image ajoutée à la bibliothèque');
-      },
-      error: (err) => this.notify.error(err)
-    });
+    this.uploading = true;
+    try {
+      const ready = await compressImage(file);
+      this.api.upload<SiteMedia>('admin/site/media', ready).subscribe({
+        next: (item) => {
+          this.uploading = false;
+          this.items = [item, ...this.items.filter((row) => row.url !== item.url)];
+          this.selected = item;
+          this.notify.success('Image ajoutée à la bibliothèque');
+        },
+        error: (err) => {
+          this.uploading = false;
+          this.notify.error(err);
+        }
+      });
+    } catch {
+      this.uploading = false;
+      this.notify.error('Impossible de lire cette image');
+    }
   }
 
   use(): void {

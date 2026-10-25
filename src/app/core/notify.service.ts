@@ -20,8 +20,14 @@ export class NotifyService {
       return err;
     }
     const http = err as HttpErrorResponse;
+    if (http?.status === 413) {
+      return 'Image trop volumineuse. Choisissez un JPEG, PNG ou WebP plus léger.';
+    }
+    if (http?.status === 401) {
+      return 'Session expirée. Reconnectez-vous pour continuer.';
+    }
     const body = http?.error as ErrorResponse | string | undefined;
-    if (typeof body === 'string' && body.trim()) {
+    if (typeof body === 'string' && body.trim() && !body.trim().startsWith('<')) {
       return body;
     }
     if (body && typeof body === 'object' && body.message) {
