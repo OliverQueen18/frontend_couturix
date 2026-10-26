@@ -16,8 +16,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  min-height: 76px;
-  padding: 0.7rem 4vw;
+  min-height: 96px;
+  padding: 0.55rem 4vw;
   background: rgba(255, 255, 255, 0.78);
   backdrop-filter: blur(18px);
   transition: background 0.25s ease, box-shadow 0.25s ease;
@@ -28,7 +28,13 @@
   box-shadow: var(--shadow);
 }
 
-.brand img { height: 42px; display: block; }
+.brand img {
+  height: 72px;
+  width: auto;
+  max-width: min(280px, 58vw);
+  object-fit: contain;
+  display: block;
+}
 
 .bar-links, nav, .bar-actions {
   display: flex;
@@ -94,6 +100,11 @@ nav a.is-on, nav a:hover, .text-btn:hover, a.btn.is-on { color: var(--pink); }
   background: #fff;
   color: var(--ink);
   border-color: var(--line);
+}
+
+@media (max-width: 760px) {
+  .bar { min-height: 84px; }
+  .brand img { height: 58px; }
 }
 
 @media (max-width: 1180px) {

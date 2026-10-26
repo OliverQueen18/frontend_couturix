@@ -62,7 +62,7 @@ import { SiteContentService } from '../core/site-content.service';
     .foot { padding: 3rem 0 1.3rem; background: #1d082f; color: rgba(255,255,255,.78); }
     .wrap { width: min(1180px, calc(100% - 2.5rem)); margin-inline: auto; }
     .grid { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 1.5rem; }
-    img { height: 42px; }
+    img { height: 64px; width: auto; max-width: min(240px, 70vw); object-fit: contain; display: block; margin-bottom: .7rem; }
     p { margin: 0 0 .55rem; }
     .grid p { color: #fff; font-size: .78rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
     a { display: block; margin: .35rem 0; color: rgba(255,255,255,.78); text-decoration: none; }
